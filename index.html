@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de" data-appearance="dark">
+  <head>
+    <script>
+      try {
+        var a = localStorage.getItem('portfolio-appearance');
+        if (a === 'light' || a === 'contrast' || a === 'dark') {
+          document.documentElement.setAttribute('data-appearance', a);
+        }
+        var v = localStorage.getItem('portfolio-viewport');
+        if (v === 'desktop' || v === 'laptop' || v === 'mobile') {
+          document.documentElement.setAttribute('data-viewport', v);
+        }
+      } catch (e) {}
+    </script>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Portfolio von Sven Sieber – Data and Frontend Engineer. Spezialisiert auf datengetriebenes Webdesign, performante Webentwicklung (React, Vue, TS), UI/UX-Gesetze und Web-Analytics." />
+    <title>Sven Sieber | Data and Frontend Engineer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

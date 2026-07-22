@@ -1,0 +1,784 @@
+/* Darstellungsmodi: dark (Standard), light, contrast (barrierefrei) */
+
+:root,
+[data-appearance='dark'] {
+  color-scheme: dark;
+  --page-bg: #030712;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #22d3ee;
+  --accent-secondary: #8b5cf6;
+  --surface: rgba(15, 23, 42, 0.6);
+  --surface-border: #1e293b;
+  --header-fade: linear-gradient(to bottom, rgba(2, 6, 23, 0.8), transparent);
+  --footer-fade: linear-gradient(to top, rgba(2, 6, 23, 0.8), transparent);
+  --selection-bg: rgba(6, 182, 212, 0.3);
+  --selection-text: #a5f3fc;
+  --glass-bg: #090a0f;
+  --glass-gradient: linear-gradient(168deg, #2a2d36 0%, #1a1c24 10%, #12141a 22%, #0c0d12 45%, #08090d 100%);
+  --glass-border: #1e2128;
+  --glass-highlight: #3d4049;
+  --glass-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --tool-cell-bg: #151821;
+  --tool-cell-gradient: linear-gradient(165deg, #1f2430 0%, #141820 55%, #10131a 100%);
+  --tool-cell-border: #334155;
+  --tool-icon-plate: #e8edf5;
+  --tool-icon-plate-border: rgba(148, 163, 184, 0.45);
+  --scrollbar-track: rgba(15, 23, 42, 0.6);
+  --scrollbar-thumb: linear-gradient(to right, #06b6d4, #8b5cf6);
+  --glow-enabled: 1;
+  --motion-enabled: 1;
+  --switcher-bg: rgba(15, 23, 42, 0.75);
+  --switcher-border: #334155;
+  --switcher-active-bg: rgba(34, 211, 238, 0.15);
+  --switcher-active-text: #22d3ee;
+  --switcher-text: #94a3b8;
+  --heading-color: #f8fafc;
+  --heading-muted: #94a3b8;
+  --heading-gradient: linear-gradient(135deg, #22d3ee 0%, #2dd4bf 45%, #a78bfa 100%);
+}
+
+[data-appearance='light'] {
+  color-scheme: light;
+  --page-bg: #f8fafc;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --accent: #0891b2;
+  --accent-secondary: #7c3aed;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-border: #94a3b8;
+  --header-fade: linear-gradient(to bottom, rgba(248, 250, 252, 0.95), transparent);
+  --footer-fade: linear-gradient(to top, rgba(248, 250, 252, 0.95), transparent);
+  --selection-bg: rgba(8, 145, 178, 0.2);
+  --selection-text: #0e7490;
+  --glass-bg: #ffffff;
+  --glass-gradient: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  --glass-border: #94a3b8;
+  --glass-border-width: 1.5px;
+  --glass-highlight: #ffffff;
+  --glass-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.08);
+  --card-border: #94a3b8;
+  --card-border-hover-cyan: #0891b2;
+  --card-border-hover-violet: #7c3aed;
+  --card-border-hover-emerald: #059669;
+  --tool-cell-bg: #ffffff;
+  --tool-cell-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --tool-cell-border: #94a3b8;
+  --tool-icon-plate: #f1f5f9;
+  --tool-icon-plate-border: #cbd5e1;
+  --scrollbar-track: rgba(226, 232, 240, 0.8);
+  --scrollbar-thumb: linear-gradient(to right, #67e8f9, #c4b5fd);
+  --glow-enabled: 1;
+  --motion-enabled: 1;
+  --switcher-bg: rgba(255, 255, 255, 0.95);
+  --switcher-border: #94a3b8;
+  --switcher-active-bg: rgba(8, 145, 178, 0.12);
+  --switcher-active-text: #0891b2;
+  --switcher-text: #64748b;
+  --heading-color: #0f172a;
+  --heading-muted: #475569;
+  --heading-gradient: linear-gradient(135deg, #0e7490 0%, #0d9488 40%, #5b21b6 100%);
+}
+
+[data-appearance='contrast'] {
+  color-scheme: dark;
+  --page-bg: #000000;
+  --text-primary: #ffffff;
+  --text-muted: #ffffff;
+  --accent: #ffff00;
+  --accent-secondary: #ffff00;
+  --surface: #000000;
+  --surface-border: #ffffff;
+  --header-fade: none;
+  --footer-fade: none;
+  --selection-bg: #ffff00;
+  --selection-text: #000000;
+  --glass-bg: #000000;
+  --glass-gradient: none;
+  --glass-border: #ffffff;
+  --glass-highlight: #ffffff;
+  --glass-shadow: none;
+  --tool-cell-bg: #000000;
+  --tool-cell-gradient: none;
+  --tool-cell-border: #ffffff;
+  --tool-icon-plate: #ffffff;
+  --tool-icon-plate-border: #ffffff;
+  --scrollbar-track: #000000;
+  --scrollbar-thumb: #ffffff;
+  --glow-enabled: 0;
+  --motion-enabled: 0;
+  --switcher-bg: #000000;
+  --switcher-border: #ffffff;
+  --switcher-active-bg: #ffff00;
+  --switcher-active-text: #000000;
+  --switcher-text: #ffffff;
+  --heading-color: #ffffff;
+  --heading-muted: #ffffff;
+  --heading-gradient: none;
+}
+
+body {
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+}
+
+::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+/* Theme-Umschalter */
+.theme-switcher {
+  background: var(--switcher-bg);
+  border-color: var(--switcher-border);
+}
+
+.theme-switcher__btn {
+  color: var(--switcher-text);
+}
+
+.theme-switcher__btn--active {
+  background: var(--switcher-active-bg);
+  color: var(--switcher-active-text);
+}
+
+.theme-switcher__btn:focus-visible {
+  outline-color: var(--accent);
+}
+
+/* Glass & Tool-Zellen aus Variablen */
+.glass-panel {
+  background-color: var(--glass-bg) !important;
+  background-image: var(--glass-gradient) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -14px 32px -10px rgba(0, 0, 0, 0.15),
+    var(--glass-shadow) !important;
+}
+
+[data-appearance='contrast'] .glass-panel {
+  background-image: none !important;
+  border-width: 2px !important;
+  box-shadow: none !important;
+}
+
+.techstack-tool-cell {
+  background-color: var(--tool-cell-bg);
+  background-image: var(--tool-cell-gradient);
+  border: 1px solid var(--tool-cell-border);
+}
+
+.techstack-tool-icon {
+  background-color: var(--tool-icon-plate);
+  border: 1px solid var(--tool-icon-plate-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+[data-appearance='contrast'] .techstack-tool-cell {
+  background-image: none;
+  border-width: 2px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+[data-appearance='contrast'] .horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #ffffff;
+}
+
+/* Glow deaktivieren im Kontrastmodus */
+[data-appearance='contrast'] .card-glow::after {
+  display: none !important;
+  animation: none !important;
+}
+
+[data-appearance='contrast'] .card-glow {
+  animation: none !important;
+}
+
+[data-appearance='light'] .card-glow--cyan-violet {
+  --glow-from: #a5f3fc;
+  --glow-to: #ddd6fe;
+}
+
+[data-appearance='light'] .card-glow--emerald-cyan {
+  --glow-from: #a7f3d0;
+  --glow-to: #a5f3fc;
+}
+
+[data-appearance='light'] .card-glow--violet-cyan {
+  --glow-from: #ddd6fe;
+  --glow-to: #a5f3fc;
+}
+
+[data-appearance='light'] .card-glow--violet-fuchsia {
+  --glow-from: #ddd6fe;
+  --glow-to: #f5d0fe;
+}
+
+[data-appearance='light'] .card-glow--cyan-teal {
+  --glow-from: #a5f3fc;
+  --glow-to: #99f6e4;
+}
+
+[data-appearance='light'] .card-glow--emerald {
+  --glow-from: #6ee7b7;
+  --glow-to: #a7f3d0;
+}
+
+/* Light: Cards klar konturiert, weniger Glow-Nebel */
+[data-appearance='light'] .glass-panel {
+  border-width: var(--glass-border-width, 1.5px) !important;
+  box-shadow:
+    inset 0 1px 0 0 #ffffff,
+    var(--glass-shadow) !important;
+}
+
+[data-appearance='light'] .card-glow::after {
+  opacity: 0.18;
+  filter: blur(18px);
+}
+
+[data-appearance='light'] .card-glow--compact::after {
+  opacity: 0.12;
+  filter: blur(14px);
+}
+
+[data-appearance='light'] .portfolio-card,
+[data-appearance='light'] .portfolio-card-sm {
+  border-width: var(--glass-border-width, 1.5px) !important;
+  border-color: var(--card-border) !important;
+  border-style: solid !important;
+}
+
+[data-appearance='light'] .portfolio-card:hover,
+[data-appearance='light'] .portfolio-card-sm:hover {
+  border-color: var(--card-border-hover-cyan) !important;
+}
+
+[data-appearance='light'] .portfolio-card--cyan:hover {
+  border-color: var(--card-border-hover-cyan) !important;
+}
+
+[data-appearance='light'] .portfolio-card--violet:hover {
+  border-color: var(--card-border-hover-violet) !important;
+}
+
+[data-appearance='light'] .portfolio-card--emerald:hover {
+  border-color: var(--card-border-hover-emerald) !important;
+}
+
+[data-appearance='light'] .techstack-tool-cell {
+  border-width: var(--glass-border-width, 1.5px);
+  border-style: solid;
+  box-shadow: inset 0 1px 0 0 #ffffff;
+}
+
+[data-appearance='light'] .techstack-tool-icon {
+  background-color: #ffffff;
+  border-color: #94a3b8;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+[data-appearance='contrast'] .techstack-tool-icon {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: none;
+}
+
+[data-appearance='light'] .portfolio-page .blog-post-tile {
+  background-color: #ffffff !important;
+  border-color: var(--card-border) !important;
+  border-width: 1.5px !important;
+}
+
+[data-appearance='light'] .portfolio-page .blog-post-tile .bg-gradient-to-t {
+  --tw-gradient-from: #ffffff;
+}
+
+[data-appearance='light'] .portfolio-page .blog-carousel__inner > div:last-child {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+}
+
+[data-appearance='light'] .portfolio-page .glass-panel,
+[data-appearance='light'] .portfolio-page .glass-panel.portfolio-card,
+[data-appearance='light'] .portfolio-page .portfolio-card-sm.glass-panel,
+[data-appearance='light'] .portfolio-page span.portfolio-card-sm {
+  border-color: var(--card-border) !important;
+  border-width: var(--glass-border-width, 1.5px) !important;
+}
+
+[data-appearance='contrast'] .portfolio-card,
+[data-appearance='contrast'] .portfolio-card-sm {
+  border-width: 2px;
+  border-color: #ffffff !important;
+}
+
+[data-appearance='contrast'] .portfolio-card:hover,
+[data-appearance='contrast'] .portfolio-card-sm:hover {
+  border-color: #ffff00 !important;
+}
+
+/* —— Light: Tailwind-Farben im Portfolio —— */
+[data-appearance='light'] .portfolio-page :is(.text-slate-100, .text-slate-200) {
+  color: #0f172a !important;
+}
+
+[data-appearance='light'] .portfolio-page .text-slate-300 {
+  color: #334155 !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.text-slate-400, .text-slate-500) {
+  color: #64748b !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.text-cyan-400, .text-cyan-300) {
+  color: #0891b2 !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.text-violet-400, .text-violet-300) {
+  color: #7c3aed !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.text-emerald-400, .text-emerald-300) {
+  color: #059669 !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.text-fuchsia-400, .text-pink-400) {
+  color: #c026d3 !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.text-amber-400, .text-orange-400) {
+  color: #d97706 !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.bg-slate-900, .bg-slate-900\/60, .bg-slate-900\/40, .bg-slate-950) {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.border-slate-800, .border-white\/5, .border-slate-700):not(.glass-panel):not(.portfolio-card):not(.portfolio-card-sm):not(.techstack-tool-cell) {
+  border-color: #cbd5e1 !important;
+}
+
+[data-appearance='light'] .portfolio-page .glass-panel :is(.border-slate-800, .border-slate-700):not(:is(h1, h2, h3, h4, h5, h6)) {
+  border-color: #cbd5e1 !important;
+}
+
+[data-appearance='light'] .portfolio-page .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+}
+
+[data-appearance='light'] .portfolio-page .bg-slate-700 {
+  background-color: #cbd5e1 !important;
+}
+
+[data-appearance='light'] .portfolio-page .hover\:bg-slate-500:hover {
+  background-color: #94a3b8 !important;
+}
+
+[data-appearance='light'] .portfolio-page .from-slate-950\/80 {
+  --tw-gradient-from: rgba(248, 250, 252, 0.95) !important;
+}
+
+[data-appearance='light'] .portfolio-page .to-transparent {
+  --tw-gradient-to: transparent !important;
+}
+
+[data-appearance='light'] .portfolio-page .bg-gradient-to-tr.from-cyan-400.to-violet-500,
+[data-appearance='light'] .portfolio-page .bg-gradient-to-tr.from-cyan-400.to-violet-500.scale-125 {
+  background-image: linear-gradient(to top right, #67e8f9, #c4b5fd) !important;
+}
+
+[data-appearance='light'] .portfolio-page .shadow-cyan-500\/10,
+[data-appearance='light'] .portfolio-page .shadow-cyan-500\/40 {
+  --tw-shadow-color: rgba(103, 232, 249, 0.25);
+}
+
+[data-appearance='light'] .portfolio-page .text-slate-950 {
+  color: #0f172a !important;
+}
+
+[data-appearance='light'] .portfolio-page .selection\:bg-cyan-500\/30::selection,
+[data-appearance='light'] .portfolio-page ::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+[data-appearance='light'] .portfolio-page .backdrop-blur-sm,
+[data-appearance='light'] .portfolio-page .backdrop-blur-md,
+[data-appearance='light'] .portfolio-page .backdrop-blur-xl {
+  backdrop-filter: none;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border: 1.5px solid var(--surface-border) !important;
+}
+
+[data-appearance='light'] .portfolio-page .bg-slate-950\/80 {
+  background-color: rgba(248, 250, 252, 0.88) !important;
+}
+
+[data-appearance='light'] .portfolio-page .bg-\[\#14161c\] {
+  background-color: #ffffff !important;
+  border-color: var(--card-border) !important;
+  border-width: 1.5px !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .backdrop-blur-xl,
+[data-appearance='contrast'] .portfolio-page .backdrop-blur-md,
+[data-appearance='contrast'] .portfolio-page .backdrop-blur-sm {
+  backdrop-filter: none !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .bg-slate-950\/80 {
+  background-color: rgba(0, 0, 0, 0.92) !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .bg-\[\#14161c\] {
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* —— Überschriften (Light: dunkel & lesbar) —— */
+.heading-section {
+  color: inherit;
+}
+
+.heading-display {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-image: var(--heading-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+[data-appearance='light'] .portfolio-page :is(h1, h2, h3, h4, h5, h6).heading-section,
+[data-appearance='light'] .portfolio-page .heading-section {
+  color: var(--heading-color) !important;
+  -webkit-text-fill-color: var(--heading-color) !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(h1, h2, h3, h4, h5, h6):not(.heading-display):not(.bg-clip-text):not(.text-transparent) {
+  color: var(--heading-color);
+}
+
+[data-appearance='light'] .portfolio-page .heading-display,
+[data-appearance='light'] .portfolio-page :is(h1, h2, h3, h4, h5, h6).heading-display,
+[data-appearance='light'] .portfolio-page :is(h1, h2, h3, h4, h5, h6).bg-clip-text.text-transparent,
+[data-appearance='light'] .portfolio-page .bg-clip-text.text-transparent:is(h1, h2, h3, h4, h5, h6) {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background-image: var(--heading-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+}
+
+[data-appearance='light'] .portfolio-page .text-white {
+  color: var(--heading-color) !important;
+  -webkit-text-fill-color: var(--heading-color) !important;
+}
+
+[data-appearance='light'] .portfolio-page .heading-on-media,
+[data-appearance='light'] .portfolio-page .heading-on-media .text-white {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+[data-appearance='light'] .legal-page :is(h1, h2, h3) {
+  color: var(--heading-color) !important;
+  -webkit-text-fill-color: var(--heading-color) !important;
+}
+
+/* Überschriften in Cards: keine Umrandung (Light & Kontrast) */
+[data-appearance='light'] .portfolio-page .glass-panel :is(h1, h2, h3, h4, h5, h6),
+[data-appearance='light'] .portfolio-page .glass-panel .heading-section,
+[data-appearance='light'] .portfolio-page .glass-panel .heading-display,
+[data-appearance='contrast'] .portfolio-page .glass-panel :is(h1, h2, h3, h4, h5, h6),
+[data-appearance='contrast'] .portfolio-page .glass-panel .heading-section,
+[data-appearance='contrast'] .portfolio-page .glass-panel .heading-display,
+[data-appearance='light'] .legal-page :is(h1, h2, h3, h4, h5, h6),
+[data-appearance='contrast'] .legal-page :is(h1, h2, h3, h4, h5, h6) {
+  border: none !important;
+  outline: none !important;
+  -webkit-text-stroke: 0 !important;
+  box-shadow: none !important;
+}
+
+[data-appearance='light'] .portfolio-page .glass-panel :is(.heading-display, .bg-clip-text.text-transparent),
+[data-appearance='contrast'] .portfolio-page .glass-panel :is(.heading-display, .bg-clip-text.text-transparent) {
+  border: none !important;
+  outline: none !important;
+}
+
+/* —— Kontrast: starke Lesbarkeit —— */
+[data-appearance='contrast'] .portfolio-page,
+[data-appearance='contrast'] .legal-page {
+  color: #ffffff !important;
+}
+
+[data-appearance='contrast'] .portfolio-page :is(*, *::before, *::after),
+[data-appearance='contrast'] .legal-page :is(*, *::before, *::after) {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .section-reveal-layer {
+  transform: none !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .scroll-section.section-in-view .reveal-group > *,
+[data-appearance='contrast'] .portfolio-page .scroll-section.section-in-view .reveal-group--grid > * {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+[data-appearance='contrast'] .portfolio-page :is(.text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400, .text-slate-500, .text-slate-600),
+[data-appearance='contrast'] .legal-page :is(.text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400, .text-slate-500) {
+  color: #ffffff !important;
+}
+
+[data-appearance='contrast'] .portfolio-page :is(.text-cyan-400, .text-cyan-300, .text-violet-400, .text-emerald-400, .text-fuchsia-400),
+[data-appearance='contrast'] .legal-page .text-cyan-400 {
+  color: #ffff00 !important;
+}
+
+[data-appearance='contrast'] .portfolio-page :is(.bg-slate-900, .bg-slate-900\/60, .bg-slate-900\/40, .bg-slate-950, .bg-slate-800, .bg-slate-700),
+[data-appearance='contrast'] .legal-page :is(.bg-slate-950, .bg-slate-950\/90) {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+[data-appearance='contrast'] .portfolio-page :is(.border-slate-800, .border-white\/5, .border-slate-700):not(:is(h1, h2, h3, h4, h5, h6)),
+[data-appearance='contrast'] .legal-page .border-slate-800 {
+  border-color: #ffffff !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .glass-panel,
+[data-appearance='contrast'] .portfolio-page .portfolio-card,
+[data-appearance='contrast'] .portfolio-page .portfolio-card-sm {
+  border-width: 2px !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .bg-gradient-to-b,
+[data-appearance='contrast'] .portfolio-page .bg-gradient-to-t,
+[data-appearance='contrast'] .portfolio-page .bg-gradient-to-tr,
+[data-appearance='contrast'] .portfolio-page .bg-gradient-to-r,
+[data-appearance='contrast'] .portfolio-page .bg-gradient-to-br {
+  background-image: none !important;
+  background-color: #000000 !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .bg-clip-text.text-transparent,
+[data-appearance='contrast'] .portfolio-page h1.bg-clip-text {
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .from-cyan-400,
+[data-appearance='contrast'] .portfolio-page .to-violet-500 {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+}
+
+[data-appearance='contrast'] .portfolio-page header,
+[data-appearance='contrast'] .portfolio-page footer {
+  background: #000000 !important;
+  border-bottom: 2px solid #ffffff;
+}
+
+[data-appearance='contrast'] .portfolio-page footer {
+  border-top: 2px solid #ffffff;
+  border-bottom: none;
+}
+
+[data-appearance='contrast'] .portfolio-page a:hover,
+[data-appearance='contrast'] .portfolio-page button:hover,
+[data-appearance='contrast'] .legal-page a:hover {
+  color: #ffff00 !important;
+  text-decoration: underline;
+}
+
+[data-appearance='contrast'] .portfolio-page .shadow-lg,
+[data-appearance='contrast'] .portfolio-page .shadow-cyan-500\/40 {
+  box-shadow: none !important;
+}
+
+/* —— Light: animierter Hintergrund (pastell, ruhiger) —— */
+[data-appearance='light'] .animated-gradient-bg {
+  transition: --accent-h 5.5s cubic-bezier(0.4, 0, 0.2, 1), --bg-shift 5.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-appearance='light'] .animated-gradient-bg__base {
+  background: linear-gradient(
+    160deg,
+    #f8fafc 0%,
+    #eef2ff 35%,
+    #fdf4ff 65%,
+    #ecfeff 100%
+  );
+}
+
+[data-appearance='light'] .animated-gradient-bg__mist--1 {
+  background: radial-gradient(
+    ellipse 55% 45% at 40% 45%,
+    hsl(270 60% 88% / 0.7) 0%,
+    hsl(240 50% 92% / 0.4) 45%,
+    transparent 72%
+  );
+  opacity: 0.65;
+  animation: none;
+}
+
+[data-appearance='light'] .animated-gradient-bg__mist--2 {
+  background: radial-gradient(
+    ellipse 50% 50% at 60% 55%,
+    hsl(200 70% 88% / 0.65) 0%,
+    hsl(260 45% 92% / 0.35) 50%,
+    transparent 75%
+  );
+  animation: none;
+}
+
+[data-appearance='light'] .animated-gradient-bg__mist--3 {
+  background: radial-gradient(
+    ellipse 60% 40% at 50% 50%,
+    hsl(300 50% 90% / 0.5) 0%,
+    transparent 70%
+  );
+  animation: none;
+}
+
+[data-appearance='light'] .animated-gradient-bg__accent-mist {
+  opacity: 0.35;
+  filter: blur(72px);
+  animation: none;
+  background: radial-gradient(
+    ellipse 70% 55% at calc(42% + var(--bg-shift) * 0.15%) 48%,
+    hsl(calc(var(--accent-h) * 1deg) 55% 82% / 0.55) 0%,
+    hsl(calc((var(--accent-h) + 25) * 1deg) 45% 90% / 0.25) 40%,
+    transparent 68%
+  );
+}
+
+[data-appearance='light'] .animated-gradient-bg__orb--violet {
+  background: radial-gradient(circle at center, hsl(270 70% 85% / 0.55) 0%, transparent 68%);
+  animation: none;
+}
+
+[data-appearance='light'] .animated-gradient-bg__orb--blue {
+  background: radial-gradient(circle at center, hsl(200 75% 85% / 0.5) 0%, transparent 68%);
+  animation: none;
+}
+
+[data-appearance='light'] .animated-gradient-bg__orb--indigo {
+  background: radial-gradient(
+    circle at center,
+    hsl(calc(var(--accent-h) * 1deg) 60% 88% / 0.45) 0%,
+    transparent 68%
+  );
+  animation: none;
+}
+
+[data-appearance='light'] .animated-gradient-bg__veil {
+  background: radial-gradient(
+    ellipse 95% 85% at 50% 42%,
+    transparent 0%,
+    rgba(248, 250, 252, 0.15) 50%,
+    rgba(241, 245, 249, 0.45) 100%
+  );
+}
+
+/* —— Kontrast: flacher Hintergrund, keine Nebel —— */
+[data-appearance='contrast'] .animated-gradient-bg__base {
+  background: #000000;
+}
+
+[data-appearance='contrast'] .animated-gradient-bg__mist,
+[data-appearance='contrast'] .animated-gradient-bg__accent-mist,
+[data-appearance='contrast'] .animated-gradient-bg__orb,
+[data-appearance='contrast'] .animated-gradient-bg__veil {
+  display: none;
+}
+
+[data-appearance='contrast'] .animated-gradient-bg {
+  transition: none;
+}
+
+/* Legal-Seiten Light */
+[data-appearance='light'] .legal-page {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+[data-appearance='light'] .legal-page .text-slate-100,
+[data-appearance='light'] .legal-page .heading-section {
+  color: var(--heading-color) !important;
+  -webkit-text-fill-color: var(--heading-color) !important;
+}
+
+[data-appearance='light'] .legal-page .text-slate-300 {
+  color: #334155 !important;
+}
+
+[data-appearance='light'] .legal-page .text-slate-500 {
+  color: #64748b !important;
+}
+
+[data-appearance='light'] .legal-page .text-cyan-400 {
+  color: #0891b2 !important;
+}
+
+[data-appearance='light'] .legal-page :is(.bg-slate-950, .bg-slate-950\/90) {
+  background-color: #ffffff !important;
+}
+
+[data-appearance='light'] .legal-page .border-slate-800 {
+  border-color: #94a3b8 !important;
+}
+
+[data-appearance='light'] .legal-page header,
+[data-appearance='light'] .legal-page footer {
+  border-width: 1.5px;
+}
+
+[data-appearance='light'] .legal-page .prose-invert {
+  --tw-prose-body: #334155;
+  --tw-prose-headings: #0f172a;
+  --tw-prose-links: #0891b2;
+}
+
+[data-appearance='contrast'] .legal-page {
+  background-color: #000000 !important;
+}
+
+[data-appearance='contrast'] .legal-page .prose-invert {
+  --tw-prose-body: #ffffff;
+  --tw-prose-headings: #ffffff;
+  --tw-prose-links: #ffff00;
+}
+
+[data-appearance='contrast'] .legal-page header,
+[data-appearance='contrast'] .legal-page footer {
+  background: #000000 !important;
+}
+
+/* Vue-Showcase (Shadow DOM / scoped – globale Klassen) */
+[data-appearance='light'] .vue-showcase-root {
+  color: #0f172a;
+}
+
+[data-appearance='contrast'] .vue-showcase-root {
+  color: #ffffff;
+}
+
+[data-appearance='contrast'] .vue-showcase-root * {
+  animation: none !important;
+}
