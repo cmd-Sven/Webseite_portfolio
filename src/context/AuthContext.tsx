@@ -9,12 +9,21 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabaseClient'
-import { ADMIN_EMAIL, isAdminEmail, isSupabaseConfigured } from '../lib/adminAuth'
+import {
+  ADMIN_EMAIL,
+  MONITOR_EMAIL,
+  homePathForRole,
+  isAllowedAtsUser,
+  isSupabaseConfigured,
+  resolveAppRole,
+  type AppRole,
+} from '../lib/adminAuth'
 
-export type AuthErrorCode = 'config' | 'credentials' | 'not_admin' | 'unknown'
+export type AuthErrorCode = 'config' | 'credentials' | 'not_allowed' | 'unknown'
 
 interface SignInResult {
   ok: boolean
+  role?: AppRole | null
   errorCode?: AuthErrorCode
   message?: string
 }
@@ -22,11 +31,14 @@ interface SignInResult {
 interface AuthContextValue {
   session: Session | null
   user: User | null
+  role: AppRole | null
   isAdmin: boolean
+  isMonitor: boolean
   loading: boolean
   configured: boolean
   signIn: (email: string, password: string) => Promise<SignInResult>
   signOut: () => Promise<void>
+  homePath: string
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -54,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const applySession = (nextSession: Session | null) => {
       const nextUser = nextSession?.user ?? null
-      if (nextUser && !isAdminEmail(nextUser.email)) {
+      if (nextUser && !resolveAppRole(nextUser)) {
         setSession(null)
         setUser(null)
         deferredLocalSignOut()
@@ -86,21 +98,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<SignInResult> => {
-      if (!configured || !ADMIN_EMAIL) {
+      if (!configured || (!ADMIN_EMAIL && !MONITOR_EMAIL)) {
         return {
           ok: false,
           errorCode: 'config',
-          message: 'Supabase oder Admin-E-Mail ist nicht konfiguriert.',
+          message: 'Supabase oder ATS-E-Mails sind nicht konfiguriert.',
         }
       }
 
       const normalizedEmail = email.trim().toLowerCase()
 
-      if (!isAdminEmail(normalizedEmail)) {
+      if (!isAllowedAtsUser(normalizedEmail)) {
         return {
           ok: false,
-          errorCode: 'not_admin',
-          message: 'Dieser Account hat keinen Admin-Zugriff.',
+          errorCode: 'not_allowed',
+          message: 'Dieser Account hat keinen ATS-Zugriff.',
         }
       }
 
@@ -125,16 +137,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (!isAdminEmail(data.user?.email)) {
+      const role = resolveAppRole(data.user)
+      if (!role) {
         await supabase.auth.signOut({ scope: 'local' })
         return {
           ok: false,
-          errorCode: 'not_admin',
-          message: 'Dieser Account hat keinen Admin-Zugriff.',
+          errorCode: 'not_allowed',
+          message: 'Dieser Account hat keinen ATS-Zugriff.',
         }
       }
 
-      return { ok: true }
+      return { ok: true, role }
     },
     [configured],
   )
@@ -143,17 +156,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut({ scope: 'local' })
   }, [])
 
+  const role = resolveAppRole(user)
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user,
-      isAdmin: Boolean(user && isAdminEmail(user.email)),
+      role,
+      isAdmin: role === 'admin',
+      isMonitor: role === 'monitor',
       loading,
       configured,
       signIn,
       signOut,
+      homePath: homePathForRole(role),
     }),
-    [session, user, loading, configured, signIn, signOut],
+    [session, user, role, loading, configured, signIn, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

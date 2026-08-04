@@ -26,15 +26,15 @@ function PortfolioPageContent() {
   const frameRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
+  const { isAdmin, isMonitor, homePath } = useAuth()
   const [activeSection, setActiveSection] = useState<string>('hero')
   const [selectedProject, setSelectedProject] = useState<CaseStudy | null>(null)
   const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null)
   const [adminLoginOpen, setAdminLoginOpen] = useState(false)
 
   const handleAdminClick = () => {
-    if (isAdmin) {
-      navigate('/admin')
+    if (isAdmin || isMonitor) {
+      navigate(homePath)
       return
     }
     setAdminLoginOpen(true)
@@ -148,8 +148,16 @@ function PortfolioPageContent() {
                   type="button"
                   onClick={handleAdminClick}
                   className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md text-[9px] md:text-[10px] font-mono uppercase tracking-wider text-slate-500 hover:text-slate-300 border border-transparent hover:border-slate-700/70 transition-colors"
-                  aria-label={isAdmin ? 'Zum Admin-Dashboard' : 'Admin-Login öffnen'}
-                  title={isAdmin ? 'Admin-Dashboard' : 'Admin-Login'}
+                  aria-label={
+                    isAdmin
+                      ? 'Zum Admin-Dashboard'
+                      : isMonitor
+                        ? 'Zum Monitor'
+                        : 'ATS-Login öffnen'
+                  }
+                  title={
+                    isAdmin ? 'Admin-Dashboard' : isMonitor ? 'Monitor' : 'ATS-Login'
+                  }
                 >
                   <Lock className="w-3 h-3 shrink-0" aria-hidden />
                   <span className="hidden sm:inline">Admin</span>

@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useAuth, type AuthErrorCode } from '../context/AuthContext'
-import { ADMIN_EMAIL } from '../lib/adminAuth'
+import { ADMIN_EMAIL, homePathForRole } from '../lib/adminAuth'
 import { getDevAdminCredentials } from '../lib/devAdminLogin'
 import { DevAdminQuickLogin } from './DevAdminQuickLogin'
 
@@ -12,8 +12,8 @@ function errorText(code: AuthErrorCode | undefined, fallback?: string): string {
       return 'Supabase ist nicht konfiguriert. Bitte Env-Variablen setzen.'
     case 'credentials':
       return 'E-Mail oder Passwort ist falsch.'
-    case 'not_admin':
-      return 'Dieser Account hat keinen Admin-Zugriff.'
+    case 'not_allowed':
+      return 'Dieser Account hat keinen ATS-Zugriff.'
     default:
       return fallback || 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.'
   }
@@ -63,7 +63,7 @@ export function AdminLoginModal({ onClose }: AdminLoginModalProps) {
     }
 
     onClose()
-    navigate('/admin')
+    navigate(homePathForRole(result.role ?? null))
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -95,7 +95,7 @@ export function AdminLoginModal({ onClose }: AdminLoginModalProps) {
               Personal ATS
             </p>
             <h2 id={titleId} className="mt-1 text-lg font-semibold tracking-tight text-slate-100">
-              Admin-Login
+              Login
             </h2>
           </div>
           <button

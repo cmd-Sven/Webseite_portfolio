@@ -375,3 +375,98 @@ export function atsWbsCertificatePath(
 ): string {
   return `${userId}/wbs/${jobPoolId}.pdf`
 }
+
+// ---------------------------------------------------------------------------
+// Monitor-Vorschläge (Stellen + Unternehmen)
+// ---------------------------------------------------------------------------
+
+export const JOB_SUGGESTION_STATUSES = ['neu', 'uebernommen', 'abgelehnt'] as const
+export type JobSuggestionStatus = (typeof JOB_SUGGESTION_STATUSES)[number]
+
+export type JobSuggestionRow = {
+  id: string
+  suggested_by: string
+  title: string
+  company_name: string
+  source_url: string | null
+  notes: string | null
+  job_description_raw: string | null
+  status: JobSuggestionStatus
+  job_pool_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export const COMPANY_SUGGESTION_STATUSES = ['neu', 'gesehen', 'archiviert'] as const
+export type CompanySuggestionStatus = (typeof COMPANY_SUGGESTION_STATUSES)[number]
+
+export type CompanySuggestionRow = {
+  id: string
+  suggested_by: string
+  company_name: string
+  company_url: string
+  notes: string | null
+  status: CompanySuggestionStatus
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Interessante Unternehmen (Verzeichnis + Timeline)
+// ---------------------------------------------------------------------------
+
+export const COMPANY_EVENT_TYPES = [
+  'created_manual',
+  'suggested',
+  'pool_collected',
+  'pool_planned',
+  'pool_in_progress',
+  'pool_done',
+  'application_created',
+  'application_sent',
+  'feedback',
+  'interview',
+  'rejection',
+  'note',
+] as const
+
+export type CompanyEventType = (typeof COMPANY_EVENT_TYPES)[number]
+
+export type InterestingCompanyRow = {
+  id: string
+  user_id: string
+  name: string
+  website_url: string | null
+  normalized_name: string
+  notes: string | null
+  last_contact_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type CompanyEventRow = {
+  id: string
+  company_id: string
+  event_type: CompanyEventType
+  ref_table: string | null
+  ref_id: string | null
+  payload: Record<string, unknown>
+  note: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export type CompanyBadges = {
+  /** Offene Pool-Stelle / geplante oder laufende Bewerbung */
+  active: boolean
+  /** Schon mal beworben (Beworben/Interview/Absage oder applied_at) */
+  appliedBefore: boolean
+  /** Vorschlag von Monitor (Caro) */
+  fromSuggestion: boolean
+  /** Rückmeldung vorhanden */
+  hasFeedback: boolean
+}
+
+export type InterestingCompanyWithBadges = InterestingCompanyRow & {
+  badges: CompanyBadges
+}

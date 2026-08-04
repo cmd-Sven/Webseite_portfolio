@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { DevAdminQuickLogin } from '../../components/DevAdminQuickLogin'
 import { useAuth, type AuthErrorCode } from '../../context/AuthContext'
-import { ADMIN_EMAIL } from '../../lib/adminAuth'
+import { ADMIN_EMAIL, homePathForRole } from '../../lib/adminAuth'
 import { getDevAdminCredentials } from '../../lib/devAdminLogin'
 
 function errorText(code: AuthErrorCode | undefined, fallback?: string): string {
@@ -11,8 +11,8 @@ function errorText(code: AuthErrorCode | undefined, fallback?: string): string {
       return 'Supabase ist nicht konfiguriert. Bitte Env-Variablen setzen.'
     case 'credentials':
       return 'E-Mail oder Passwort ist falsch.'
-    case 'not_admin':
-      return 'Dieser Account hat keinen Admin-Zugriff.'
+    case 'not_allowed':
+      return 'Dieser Account hat keinen ATS-Zugriff.'
     default:
       return fallback || 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.'
   }
@@ -23,14 +23,12 @@ function initialDevPassword(): string {
 }
 
 export function AdminLoginPage() {
-  const { signIn, isAdmin, loading, configured } = useAuth()
+  const { signIn, role, loading, configured, homePath } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const fromState = (location.state as { from?: string } | null)?.from
   const from =
-    (location.state as { from?: string } | null)?.from &&
-    (location.state as { from?: string }).from !== '/admin/login'
-      ? (location.state as { from: string }).from
-      : '/admin'
+    fromState && fromState !== '/admin/login' ? fromState : null
 
   const [email, setEmail] = useState(ADMIN_EMAIL || '')
   const [password, setPassword] = useState(initialDevPassword)
@@ -44,8 +42,14 @@ export function AdminLoginPage() {
     }
   }, [])
 
-  if (!loading && isAdmin) {
-    return <Navigate to={from} replace />
+  if (!loading && role) {
+    const target =
+      from && role === 'admin' && from.startsWith('/admin')
+        ? from
+        : from && role === 'monitor' && from.startsWith('/monitor')
+          ? from
+          : homePath
+    return <Navigate to={target} replace />
   }
 
   async function authenticate(nextEmail: string, nextPassword: string) {
@@ -60,7 +64,8 @@ export function AdminLoginPage() {
       return
     }
 
-    navigate(from, { replace: true })
+    const dest = homePathForRole(result.role ?? null)
+    navigate(dest, { replace: true })
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -81,9 +86,9 @@ export function AdminLoginPage() {
           <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-400 font-medium">
             Personal ATS
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin-Login</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Login</h1>
           <p className="mt-2 text-sm text-zinc-500">
-            Nur für den freigeschalteten Admin-Account.
+            Admin- und Monitor-Zugang.
           </p>
         </div>
 

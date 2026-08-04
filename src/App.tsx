@@ -14,6 +14,8 @@ import { AdminApplicationDetailPage } from './pages/admin/AdminApplicationDetail
 import { AdminMasterProfilePage } from './pages/admin/AdminMasterProfilePage'
 import { AdminJobPoolPage } from './pages/admin/AdminJobPoolPage'
 import { AdminPlanPage } from './pages/admin/AdminPlanPage'
+import { AdminCompaniesPage } from './pages/admin/AdminCompaniesPage'
+import { MonitorPage } from './pages/monitor/MonitorPage'
 
 export function App() {
   return (
@@ -29,9 +31,17 @@ export function App() {
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route
+          path="/monitor"
+          element={
+            <ProtectedRoute require="monitor">
+              <MonitorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute require="admin">
               <AdminLayout />
             </ProtectedRoute>
           }
@@ -39,6 +49,8 @@ export function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="pool" element={<AdminJobPoolPage />} />
           <Route path="plan" element={<AdminPlanPage />} />
+          <Route path="companies" element={<AdminCompaniesPage />} />
+          <Route path="suggestions" element={<AdminCompaniesPage />} />
           <Route path="new" element={<AdminNewApplicationPage />} />
           <Route path="applications/:id" element={<AdminApplicationDetailPage />} />
           <Route path="profile" element={<AdminMasterProfilePage />} />

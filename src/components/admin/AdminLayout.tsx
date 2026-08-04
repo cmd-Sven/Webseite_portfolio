@@ -1,11 +1,20 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { CalendarDays, Inbox, LayoutGrid, LogOut, Plus, UserRound } from 'lucide-react'
+import {
+  Building2,
+  CalendarDays,
+  Inbox,
+  LayoutGrid,
+  LogOut,
+  Plus,
+  UserRound,
+} from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Bewerbungen', icon: LayoutGrid },
   { to: '/admin/pool', end: false, label: 'Stellen-Pool', icon: Inbox },
+  { to: '/admin/companies', end: false, label: 'Interessante Unternehmen', icon: Building2 },
   { to: '/admin/plan', end: false, label: 'Planung', icon: CalendarDays },
   { to: '/admin/new', end: false, label: 'Neue Bewerbung', icon: Plus },
   { to: '/admin/profile', end: false, label: 'Master-Profil', icon: UserRound },
