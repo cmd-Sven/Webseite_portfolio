@@ -5,9 +5,9 @@ export function AnalyticsHubLink() {
   return (
     <PortfolioCard glow="card-glow--emerald-cyan" hover="emerald" className="w-full text-slate-100">
       <div className="space-y-3">
-        <p className="text-xs text-slate-400">
-          Vue-Einstellungen und drei interaktive SVG-Analysen auf einer scrollbaren Seite – live
-          gekoppelt.
+        <p className="text-xs leading-relaxed text-slate-400">
+          Die vollständige Demo öffnet in einem neuen Tab: Vue-Panel links, Charts darunter bzw. rechts –
+          alles live gekoppelt.
         </p>
         <a
           href="/analytics"
@@ -23,10 +23,10 @@ export function AnalyticsHubLink() {
               <BarChart3 className="w-5 h-5 shrink-0" aria-hidden />
               <div className="min-w-0">
                 <span className="text-sm font-semibold text-slate-100 block">
-                  Analytics & Statistiken öffnen
+                  Interaktive Demo öffnen
                 </span>
                 <span className="text-[10px] text-slate-500">
-                  Wochenverlauf · Funnel · Performance – öffnet in neuem Tab
+                  Vue-Steuerung · Wochenverlauf · Funnel · Performance
                 </span>
               </div>
             </div>

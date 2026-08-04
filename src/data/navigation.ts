@@ -11,15 +11,16 @@ export const SECTIONS_ORDER = [
   'contact',
 ] as const
 
+/** Anker-IDs der Landingpage-Sektionen (Reihenfolge = Scroll-Reihenfolge) */
 export const NAV_SECTIONS: NavSection[] = [
-  { id: 'hero', title: 'Start', subtitle: 'Intro' },
-  { id: 'about', title: 'Über mich', subtitle: 'Profil' },
-  { id: 'expertise', title: 'Expertise', subtitle: '4 Säulen' },
-  { id: 'techstack', title: 'Tech Stack', subtitle: 'Tools' },
-  { id: 'dashboard', title: 'Analytics', subtitle: 'Live Demo' },
+  { id: 'hero', title: 'Start', subtitle: 'Intro & Fokus' },
+  { id: 'about', title: 'Über mich', subtitle: 'Profil & Werdegang' },
+  { id: 'expertise', title: 'Expertise', subtitle: 'Vier Kernsäulen' },
+  { id: 'techstack', title: 'Tech Stack', subtitle: 'Tools & Skills' },
+  { id: 'dashboard', title: 'Analytics', subtitle: 'Live-Demo' },
   { id: 'projects', title: 'Projekte', subtitle: 'Case Studies' },
-  { id: 'blog', title: 'Blog', subtitle: 'Artikel' },
-  { id: 'contact', title: 'Kontakt', subtitle: 'Bewerbung' },
+  { id: 'blog', title: 'Blog', subtitle: 'Artikel & Insights' },
+  { id: 'contact', title: 'Kontakt', subtitle: 'Nachricht senden' },
 ]
 
 export const RESUME_PDF_PATH = '/documents/lebenslauf.pdf'

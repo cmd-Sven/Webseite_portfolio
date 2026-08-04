@@ -9,13 +9,20 @@ const SLIDE_INTERVAL_MS = 5000
 interface BlogTeaserSliderProps {
   onOpenPost: (post: BlogPost) => void
   onScrollToBlog: () => void
+  /** `hero`: eingebettet im Hero-Banner, ohne eigene Glow-Card */
+  variant?: 'default' | 'hero'
 }
 
-export function BlogTeaserSlider({ onOpenPost, onScrollToBlog }: BlogTeaserSliderProps) {
+export function BlogTeaserSlider({
+  onOpenPost,
+  onScrollToBlog,
+  variant = 'default',
+}: BlogTeaserSliderProps) {
   const slides = getLatestBlogPosts(3)
   const newest = getNewestBlogPost()
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
+  const isHero = variant === 'hero'
 
   const goTo = useCallback(
     (index: number) => {
@@ -33,103 +40,142 @@ export function BlogTeaserSlider({ onOpenPost, onScrollToBlog }: BlogTeaserSlide
     return () => window.clearInterval(timer)
   }, [slides.length, paused])
 
+  const emptyMessage = (
+    <p className="text-xs text-slate-400">Blog-Beiträge in src/data/blogPosts.ts anlegen.</p>
+  )
+
   if (slides.length === 0 || !newest) {
+    if (isHero) {
+      return <div className="blog-teaser-box blog-teaser-box--hero w-full">{emptyMessage}</div>
+    }
     return (
-      <PortfolioCard glow="card-glow--violet-cyan card-glow--compact" hover="violet" className="blog-teaser-box w-full max-w-sm">
-        <p className="text-xs text-slate-400">Blog-Beiträge in src/data/blogPosts.ts anlegen.</p>
+      <PortfolioCard
+        glow="card-glow--violet-cyan card-glow--compact"
+        hover="violet"
+        className="blog-teaser-box w-full max-w-sm"
+      >
+        {emptyMessage}
       </PortfolioCard>
     )
   }
 
   const post = slides[activeIndex]
 
-  return (
-    <PortfolioCard glow="card-glow--violet-cyan card-glow--compact" hover="violet" className="blog-teaser-box w-full max-w-sm">
+  const content = (
+    <div
+      className="flex flex-col gap-3"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       <div
-        className="flex flex-col gap-3"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocus={() => setPaused(true)}
-        onBlur={() => setPaused(false)}
+        className={`flex items-center justify-between gap-2 pb-2 ${
+          isHero ? 'border-b border-slate-800/80' : 'border-b border-slate-800'
+        }`}
       >
-        <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-violet-400 uppercase tracking-widest">
-            <BookOpen className="w-3.5 h-3.5" />
-            Blog
-          </span>
-          <button
-            type="button"
-            onClick={() => onOpenPost(newest)}
-            className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors shrink-0"
-          >
-            Neuester Beitrag
-            <ArrowRight className="w-3 h-3" />
-          </button>
-        </div>
-
-        <article className="blog-teaser-slider min-h-[7.5rem]">
-          <button
-            type="button"
-            onClick={() => onOpenPost(post)}
-            className="text-left group flex flex-col gap-1.5 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 rounded-lg"
-          >
-            <time className="text-[9px] font-mono text-slate-500">{formatBlogDate(post.date)}</time>
-            <h3 className="heading-section text-sm font-bold leading-snug group-hover:text-cyan-400 transition-colors line-clamp-2">
-              {post.title}
-            </h3>
-            <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-3">{post.teaser}</p>
-            <span className="text-[10px] font-mono text-cyan-400 flex items-center gap-1 mt-0.5">
-              Weiterlesen
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </span>
-          </button>
-        </article>
-
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <div className="flex items-center gap-1.5" role="tablist" aria-label="Blog-Vorschau">
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                role="tab"
-                aria-selected={index === activeIndex}
-                aria-label={`Beitrag ${index + 1}: ${slide.title}`}
-                onClick={() => goTo(index)}
-                className={`h-1.5 rounded-full transition-all ${
-                  index === activeIndex ? 'w-5 bg-cyan-400' : 'w-1.5 bg-slate-600 hover:bg-slate-500'
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => goTo(activeIndex - 1)}
-              className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
-              aria-label="Vorheriger Beitrag"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => goTo(activeIndex + 1)}
-              className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
-              aria-label="Nächster Beitrag"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-violet-400">
+          <BookOpen className="h-3.5 w-3.5" />
+          Blog
+        </span>
         <button
           type="button"
-          onClick={onScrollToBlog}
-          className="text-[10px] font-mono text-slate-500 hover:text-violet-400 text-center w-full pt-1 border-t border-slate-800 transition-colors"
+          onClick={() => onOpenPost(newest)}
+          className="flex shrink-0 items-center gap-0.5 text-[10px] font-mono text-cyan-400 transition-colors hover:text-cyan-300"
         >
-          Alle Beiträge anzeigen →
+          Neuester Beitrag
+          <ArrowRight className="h-3 w-3" />
         </button>
       </div>
+
+      <article className={`blog-teaser-slider ${isHero ? 'min-h-[8.5rem]' : 'min-h-[7.5rem]'}`}>
+        <button
+          type="button"
+          onClick={() => onOpenPost(post)}
+          className="group flex w-full flex-col gap-1.5 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50"
+        >
+          <time className="font-mono text-[9px] text-slate-500">{formatBlogDate(post.date)}</time>
+          <h3
+            className={`heading-section font-bold leading-snug transition-colors group-hover:text-cyan-400 line-clamp-2 ${
+              isHero ? 'text-base md:text-lg' : 'text-sm'
+            }`}
+          >
+            {post.title}
+          </h3>
+          <p
+            className={`leading-relaxed text-slate-400 line-clamp-3 ${
+              isHero ? 'text-xs md:text-[13px]' : 'text-[11px]'
+            }`}
+          >
+            {post.teaser}
+          </p>
+          <span className="mt-0.5 flex items-center gap-1 font-mono text-[10px] text-cyan-400">
+            Weiterlesen
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </button>
+      </article>
+
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <div className="flex items-center gap-1.5" role="tablist" aria-label="Blog-Vorschau">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              role="tab"
+              aria-selected={index === activeIndex}
+              aria-label={`Beitrag ${index + 1}: ${slide.title}`}
+              onClick={() => goTo(index)}
+              className={`h-1.5 rounded-full transition-all ${
+                index === activeIndex ? 'w-5 bg-cyan-400' : 'w-1.5 bg-slate-600 hover:bg-slate-500'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => goTo(activeIndex - 1)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-700 text-slate-400 transition-colors hover:border-slate-500 hover:text-white"
+            aria-label="Vorheriger Beitrag"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => goTo(activeIndex + 1)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-700 text-slate-400 transition-colors hover:border-slate-500 hover:text-white"
+            aria-label="Nächster Beitrag"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onScrollToBlog}
+        className={`w-full pt-1 text-center font-mono text-[10px] text-slate-500 transition-colors hover:text-violet-400 ${
+          isHero ? 'border-t border-slate-800/80' : 'border-t border-slate-800'
+        }`}
+      >
+        Alle Beiträge anzeigen →
+      </button>
+    </div>
+  )
+
+  if (isHero) {
+    return <div className="blog-teaser-box blog-teaser-box--hero w-full">{content}</div>
+  }
+
+  return (
+    <PortfolioCard
+      glow="card-glow--violet-cyan card-glow--compact"
+      hover="violet"
+      className="blog-teaser-box w-full max-w-sm"
+    >
+      {content}
     </PortfolioCard>
   )
 }

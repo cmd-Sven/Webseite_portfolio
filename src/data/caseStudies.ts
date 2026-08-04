@@ -2,72 +2,96 @@ import type { CaseStudy } from '../types/portfolio'
 
 export const CASE_STUDIES: CaseStudy[] = [
   {
-    id: 'optimize_cro',
-    badge: 'UX & DATA SCIENCE',
+    id: 'goexplore',
+    kind: 'case-study',
+    badge: 'DATENANALYSE',
     badgeColor: 'from-cyan-500 to-teal-400',
-    title: 'OPTIMIZE_CRO',
-    subtitle: 'A/B Testing & E-Commerce Redesign',
+    title: 'GOEXPLORE',
+    subtitle: 'CEO-Dashboard für Wachstumsentscheidungen',
     teaser:
-      'Analyse von Nutzerabbrüchen im Checkout-Funnel. Durch gezieltes Redesign und statistische Hypothesentests wurde die Conversion Rate simuliert optimiert.',
-    tags: ['Data Analytics', 'React', 'Python / SciPy', 'A/B Testing'],
-    situation:
-      'Ein mittelständischer E-Commerce-Händler verzeichnete eine ungewöhnlich hohe Abbruchrate von 42% im letzten Schritt des Bestellprozesses (Checkout). Die genauen Usability-Gründe waren unklar.',
-    task: 'Es galt, den Datensatz zu analysieren, quantitative Schwachstellen zu identifizieren, das UI nach UX-Gesetzen umzugestalten und die Verbesserung mathematisch abzusichern.',
-    action:
-      "Zuerst habe ich mittels Python (Pandas) einen synthetischen Datensatz von 10.000 Sessions analysiert, um die Drop-Off-Points zu isolieren. Auf dieser Basis wurde das Formularlayout in Figma nach Hick's Law gestrafft (weniger kognitive Last) und in React neu gebaut. Abschließend habe ich einen simulierten A/B-Test durchgeführt und mittels Chi-Quadrat-Test (SciPy) auf Signifikanz geprüft.",
-    result:
-      'Die optimierte Variante senkte die Abbruchrate im mathematischen Modell signifikant. Umgerechnet auf den realen Traffic entspricht dies einer Steigerung der Conversion Rate um +24% und einer erheblichen Umsatzsteigerung.',
-    githubUrl: 'https://github.com/svensieber',
-    mockupImg: '/projects/optimize_cro/cover.webp',
+      'Ich habe Verkaufsdaten so aufbereitet, dass Expansion und Preis-Szenarien interaktiv vergleichbar werden – kein statischer Report, sondern ein Briefing-Cockpit.',
+    tags: ['Data Analytics', 'TypeScript', 'KPI-Visualisierung', 'Szenario-Analyse'],
+    goal:
+      'Entscheidungsträger sollten Performance, Expansionsoptionen und What-if-Fragen in einem konsistenten Navigationsraum beantworten können – ohne Excel-Pingpong.',
+    techniques:
+      'Drei Analysebereiche gebaut: KPI-Karten mit Sparklines, Marktfilter und Ländervergleiche mit Drill-downs; dazu prognostische Views und kaufkraftgewichtete Preis-Szenarien. Fokus auf Scope-Konsistenz über Filter und Views hinweg.',
+    transfer:
+      'Das gleiche Muster nutze ich bei Business- und CEO-Dashboards: Metriken zuerst klären, dann explorierbar machen, Szenarien erst danach. Übertragbar auf BI-Frontends, Funnel-Reports und datengestützte Produktentscheidungen.',
+    githubUrl: 'https://github.com/cmd-Sven/goexplore-dashboard',
+    liveUrl: 'https://goexplore-app.vercel.app',
+    mockupImg: '/projects/goexplore/cover.webp',
   },
   {
-    id: 'finance_dashboard',
-    badge: 'FRONTEND & API',
-    badgeColor: 'from-violet-500 to-fuchsia-400',
-    title: 'FINANCE_DASHBOARD',
-    subtitle: 'Echtzeit Finanz-Cockpit',
-    teaser:
-      'Entwicklung einer hoch-performanten Dashboard-Webapp zur Visualisierung komplexer Wertpapierdaten mit Vue 3 und TypeScript.',
-    tags: ['Vue 3', 'TypeScript', 'Tailwind CSS', 'REST-APIs'],
-    situation:
-      'Klassische Finanz-Dashboards leiden oft unter massiven Performance-Einbrüchen, wenn große Mengen an historischen Zeitreihendaten gleichzeitig im Client gerendert werden.',
-    task: 'Ziel war die Entwicklung einer reaktiven Single-Page-Applikation, die Finanzdaten über eine offene API aggregiert und ohne spürbare Ladezeiten (60 FPS) via SVG/Canvas visualisiert.',
-    action:
-      'Implementierung einer modularen Architektur in Vue 3 (Composition API) und TypeScript. Die Datenströme wurden clientseitig normalisiert, um unnötige Re-Renderings zu vermeiden. Das UI wurde mit Tailwind CSS im Dark-Mode gestaltet, um die visuelle Hierarchie der KPIs zu schärfen.',
-    result:
-      'Ein voll funktionales, responsives Cockpit, das auch bei der Verarbeitung von über 50.000 Datenpunkten flüssig reagiert. Der Prototyp demonstriert exzellente Core Web Vitals (LCP < 1.2s).',
-    githubUrl: 'https://github.com/svensieber',
-    mockupImg: '/projects/finance_dashboard/cover.webp',
-  },
-  {
-    id: 'medtech_identity',
-    badge: 'BRANDING & A11Y',
+    id: 'tableheroes',
+    kind: 'project',
+    badge: 'LIVE-PROJEKT',
     badgeColor: 'from-emerald-500 to-green-400',
-    title: 'MEDTECH_IDENTITY',
-    subtitle: 'Medizinische Web-Präsenz',
+    title: 'TABLE HEROES',
+    subtitle: 'TTRPG-Community & Kampagnen-Plattform',
     teaser:
-      'Komplettes UI/UX Design, Corporate Branding und barrierefreie Frontend-Entwicklung (WCAG AA konform) für ein Medizintechnik-Szenario.',
-    tags: ['UI/UX', 'Figma', 'Accessibility (A11y)', 'Corporate Design'],
-    situation:
-      'Im medizinischen Sektor ist digitale Barrierefreiheit oft unzureichend, obwohl ältere oder eingeschränkte Menschen zur primären Zielgruppe gehören.',
-    task: 'Entwicklung eines ganzheitlichen Corporate Designs und einer Web-Präsenz, die strengen WCAG 2.1 AA Richtlinien entspricht, ohne dabei an moderner Ästhetik einzubüßen.',
-    action:
-      'Erstellung eines barrierefreien Farbsystems (Kontrastverhältnis > 4.5:1) und responsiver Typografie-Skalen in Figma. Bei der Frontend-Entwicklung wurden semantisches HTML, WAI-ARIA-Attribute und eine vollständige Tastatur-Navigierbarkeit sichergestellt.',
-    result:
-      'Ein absolut sauberes, empathisches Design-System. Der anschließende Audit mit Lighthouse und Screenreadern (NVDA) ergab einen Accessibility-Score von perfekten 100/100 Punkten.',
-    figmaUrl: 'https://figma.com',
-    mockupImg: '/projects/medtech_identity/cover.webp',
+      'Mein einziges laufendes Produkt: Community, Lore/Kampagnen und Session-Board unter table-heroes.de – produktiv betrieben, nicht nur als Demo.',
+    tags: ['Next.js', 'Supabase', 'React', 'Three.js'],
+    goal:
+      'Gruppen und Spielleiter brauchen eine gemeinsame digitale Basis für Community, Weltbau und Sessions – ohne den Fokus auf analoges Spielen zu verlieren.',
+    techniques:
+      'Next.js/React mit Supabase (Auth, Postgres), Tailwind und Motion. Features u. a. Lore/NSCs, Session-Board, 3D-Würfel und KI-Chronist; Deploy und Cron auf Vercel. Ich iteriere am Live-System statt an einer einmaligen Showcase.',
+    transfer:
+      'Übertragbar auf Community- und SaaS-Produkte: Auth, Rollen, Feature-Releases unter realem Traffic. Das gleiche Muster – Shell in Next, Daten und Auth in Supabase, schrittweise Features – nutze ich bei größeren Full-Stack-Vorhaben.',
+    githubUrl: 'https://github.com/cmd-Sven/tableheroes-website',
+    liveUrl: 'https://table-heroes.de',
+    mockupImg: '/projects/tableheroes/cover.webp',
+  },
+  {
+    id: 'lernplattform',
+    kind: 'case-study',
+    badge: 'UX / UI',
+    badgeColor: 'from-violet-500 to-fuchsia-400',
+    title: 'PCEP LERNPLATTFORM',
+    subtitle: 'Lernfluss, Onboarding & Feedback-Schleife',
+    teaser:
+      'Ich habe die PCEP-Vorbereitung um ein klares Onboarding und Übungsfluss herum gestaltet – und anhand von Teilnehmer-Feedback iteriert.',
+    tags: ['UI/UX', 'Next.js', 'DaisyUI', 'Supabase'],
+    goal:
+      'Kurs-Teilnehmer sollten motiviert und geführt in Zertifizierungs-Inhalte einsteigen – nicht vor einer Inhaltsliste stehen bleiben.',
+    techniques:
+      'Hero-Onboarding mit Maskottchen Pyto, sequentielle Lektionen (Flip-Karten, Multiple Choice, Code), Theme-Varianten inkl. Kontrast, Challenges und ein Gästebuch als Feedback-Kanal. Stack: Next.js, DaisyUI, Supabase.',
+    transfer:
+      'Das gleiche Muster – bauen, mit echten Nutzern testen, Feedback einsammeln, nachschärfen – übertrage ich auf Onboarding-Flows, EdTech und jede UX, bei der Motivation und Klarheit vor Feature-Dichte kommen.',
+    githubUrl: 'https://github.com/cmd-Sven/python-lernplattform',
+    liveUrl: 'https://python-lernplattform.vercel.app',
+    mockupImg: '/projects/lernplattform/cover.webp',
+  },
+  {
+    id: 'bookworm',
+    kind: 'case-study',
+    badge: 'FULL-STACK',
+    badgeColor: 'from-teal-500 to-cyan-400',
+    title: 'BOOKWORM',
+    subtitle: 'Bücherverleih unter Freunden',
+    teaser:
+      'Ich habe den Ausleihprozess digitalisiert: Katalog, Fristen, Auth – Next.js als Hauptapp, Streamlit als schneller Prototyp auf derselben Supabase-DB.',
+    tags: ['Next.js', 'Supabase', 'Python / Streamlit', 'Auth & RLS'],
+    goal:
+      'Private Buchbestände und Ausleihen nachvollziehbar machen: Wer hat welches Buch, bis wann, und wie kommt es zurück?',
+    techniques:
+      'Next.js mit Supabase (Auth, Postgres, RLS), Google-Books-Anreicherung und ISBN-Barcode-Scan. Parallel eine Streamlit-Oberfläche für Katalog/Admin auf denselben Daten – Prototyp und Produktions-UI teilen das Schema.',
+    transfer:
+      'Übertragbar auf Full-Stack-Apps mit klaren Domänenregeln: Auth zuerst, RLS als Sicherheitsnetz, eine Datenbasis für mehrere UIs. Das gleiche Muster nutze ich, wenn ich schnell validieren und danach die React-Oberfläche ausbauen will.',
+    githubUrl: 'https://github.com/cmd-Sven/bookworm-app',
+    mockupImg: '/projects/bookworm/cover.webp',
   },
 ]
 
 export function getProjectGlowClass(projectId: string): string {
-  if (projectId === 'optimize_cro') return 'card-glow--cyan-teal'
-  if (projectId === 'finance_dashboard') return 'card-glow--violet-fuchsia'
-  return 'card-glow--emerald-cyan'
+  if (projectId === 'goexplore') return 'card-glow--cyan-teal'
+  if (projectId === 'tableheroes') return 'card-glow--emerald-cyan'
+  if (projectId === 'lernplattform') return 'card-glow--violet-fuchsia'
+  return 'card-glow--violet-cyan'
 }
 
 export function getProjectHeaderGradient(projectId: string): string {
-  if (projectId === 'optimize_cro') return 'from-cyan-950/80'
-  if (projectId === 'finance_dashboard') return 'from-violet-950/80'
-  return 'from-emerald-950/80'
+  if (projectId === 'goexplore') return 'from-cyan-950/80'
+  if (projectId === 'tableheroes') return 'from-emerald-950/80'
+  if (projectId === 'lernplattform') return 'from-violet-950/80'
+  return 'from-teal-950/80'
 }

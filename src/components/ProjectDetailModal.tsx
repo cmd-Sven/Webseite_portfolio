@@ -7,6 +7,8 @@ interface ProjectDetailModalProps {
 }
 
 export function ProjectDetailModal({ project, onClose }: ProjectDetailModalProps) {
+  const isLiveProject = project.kind === 'project'
+
   return (
     <div
       className="viewport-modal-overlay flex items-center justify-center p-4 md:p-10 backdrop-blur-xl bg-slate-950/80 animate-fadeIn pointer-events-auto"
@@ -34,7 +36,7 @@ export function ProjectDetailModal({ project, onClose }: ProjectDetailModalProps
             </span>
             <h2 className="heading-section text-2xl md:text-3xl font-black tracking-tight">{project.subtitle}</h2>
             <p className="text-xs text-cyan-400 font-mono mt-1">
-              Spezialisierungs-Projekt // {project.title}
+              {isLiveProject ? 'Aktives Produkt' : 'Case Study'} // {project.title}
             </p>
           </div>
 
@@ -42,47 +44,38 @@ export function ProjectDetailModal({ project, onClose }: ProjectDetailModalProps
             <div className="lg:col-span-3 space-y-4">
               <div>
                 <h4 className="text-xs font-mono text-slate-500 uppercase tracking-wider">
-                  01. Situation (Das Problem)
+                  01. Ziel
                 </h4>
-                <p className="text-xs text-slate-300 leading-relaxed mt-1">{project.situation}</p>
+                <p className="text-xs text-slate-300 leading-relaxed mt-1">{project.goal}</p>
               </div>
               <div>
                 <h4 className="text-xs font-mono text-slate-500 uppercase tracking-wider">
-                  02. Task (Die Aufgabe)
+                  02. Techniken & Vorgehen
                 </h4>
-                <p className="text-xs text-slate-300 leading-relaxed mt-1">{project.task}</p>
-              </div>
-              <div>
-                <h4 className="text-xs font-mono text-slate-500 uppercase tracking-wider">
-                  03. Action (Meine Umsetzung)
-                </h4>
-                <p className="text-xs text-slate-300 leading-relaxed mt-1">{project.action}</p>
+                <p className="text-xs text-slate-300 leading-relaxed mt-1">{project.techniques}</p>
               </div>
               <div>
                 <h4 className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
-                  04. Result (Das Ergebnis)
+                  03. Transfer
                 </h4>
                 <p className="text-xs text-emerald-300/90 font-medium leading-relaxed mt-1">
-                  {project.result}
+                  {project.transfer}
                 </p>
               </div>
             </div>
 
             <div className="lg:col-span-2 space-y-4 flex flex-col justify-between">
-              <div className="w-full h-44 rounded-xl bg-[#0a0b10] border border-slate-800 flex flex-col items-center justify-center p-4 text-center overflow-hidden relative group">
+              <div className="w-full h-44 rounded-xl bg-[#0a0b10] border border-slate-800 flex flex-col items-center justify-center overflow-hidden relative group">
                 {project.mockupImg && (
                   <img
                     src={project.mockupImg}
-                    alt="Projekt Visualisierung"
-                    className="max-w-full max-h-full object-contain filter brightness-90 group-hover:scale-105 transition-transform"
+                    alt={`${project.title} Vorschaubild`}
+                    className="w-full h-full object-cover object-top filter brightness-90 group-hover:scale-105 transition-transform"
                     onError={(e) => {
                       ;(e.target as HTMLImageElement).style.display = 'none'
                     }}
                   />
                 )}
-                <span className="text-[10px] text-slate-500 font-mono block mt-2">
-                  Bild: public/projects/{project.id}/cover.webp
-                </span>
               </div>
 
               <div>
@@ -102,12 +95,12 @@ export function ProjectDetailModal({ project, onClose }: ProjectDetailModalProps
               </div>
 
               <div className="pt-2 border-t border-slate-800 space-y-2">
-                {project.githubUrl && (
+                {project.liveUrl && (
                   <a
-                    href={project.githubUrl}
+                    href={project.liveUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn btn-sm w-full bg-[#14161c] hover:bg-[#1c1f28] text-slate-200 border border-slate-700 normal-case font-mono text-[11px] rounded-xl flex items-center justify-center gap-2"
+                    className="btn btn-sm w-full bg-gradient-to-r from-cyan-600 to-teal-500 hover:from-cyan-500 hover:to-teal-400 text-slate-950 border-0 normal-case font-mono text-[11px] rounded-xl flex items-center justify-center gap-2"
                   >
                     <svg
                       className="w-4 h-4"
@@ -116,11 +109,31 @@ export function ProjectDetailModal({ project, onClose }: ProjectDetailModalProps
                       stroke="currentColor"
                       strokeWidth="2"
                     >
-                      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
                     </svg>
-                    Code auf GitHub ansehen
+                    Live-Website öffnen
                   </a>
                 )}
+                <a
+                  href={project.githubUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-sm w-full bg-[#14161c] hover:bg-[#1c1f28] text-slate-200 border border-slate-700 normal-case font-mono text-[11px] rounded-xl flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                    <path d="M9 18c-4.51 2-5-2-7-2" />
+                  </svg>
+                  Code auf GitHub ansehen
+                </a>
                 {project.figmaUrl && (
                   <a
                     href={project.figmaUrl}

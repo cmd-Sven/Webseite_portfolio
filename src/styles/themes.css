@@ -457,6 +457,29 @@ body {
   -webkit-background-clip: text;
 }
 
+[data-appearance='light'] .section-lead {
+  color: var(--heading-muted, #475569);
+}
+
+[data-appearance='light'] .section-eyebrow--cyan {
+  color: #0e7490;
+}
+
+[data-appearance='light'] .section-eyebrow--violet {
+  color: #6d28d9;
+}
+
+[data-appearance='light'] .section-eyebrow--emerald {
+  color: #047857;
+}
+
+[data-appearance='contrast'] .section-lead,
+[data-appearance='contrast'] .section-eyebrow--cyan,
+[data-appearance='contrast'] .section-eyebrow--violet,
+[data-appearance='contrast'] .section-eyebrow--emerald {
+  color: #ffffff;
+}
+
 [data-appearance='light'] .portfolio-page :is(h1, h2, h3, h4, h5, h6).heading-section,
 [data-appearance='light'] .portfolio-page .heading-section {
   color: var(--heading-color) !important;

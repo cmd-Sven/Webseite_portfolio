@@ -294,9 +294,9 @@ body {
   }
 }
 
-/* Base scrollbar styles for the horizontal container */
+/* Scrollbar für den vertikalen Portfolio-Container */
 .horizontal-scroll-container::-webkit-scrollbar {
-  height: 6px;
+  width: 6px;
 }
 
 .horizontal-scroll-container::-webkit-scrollbar-track {
@@ -305,12 +305,12 @@ body {
 }
 
 .horizontal-scroll-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(to right, #06b6d4, #8b5cf6);
+  background: linear-gradient(to bottom, #06b6d4, #8b5cf6);
   border-radius: 9999px;
 }
 
 .horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to right, #22d3ee, #a78bfa);
+  background: linear-gradient(to bottom, #22d3ee, #a78bfa);
 }
 
 /* Glow-Hülle (nur äußerer Schein – ::after) */
@@ -435,32 +435,127 @@ body {
   border-color: rgba(34, 211, 238, 0.2);
 }
 
-/* Horizontal scrolling wrapper snaps */
+/* Vertikaler Portfolio-Scroll (klassische Landingpage) */
 .horizontal-scroll-container {
   display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
+  flex-direction: column;
+  overflow-x: clip;
+  overflow-y: auto;
   scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: none;
   width: 100%;
   height: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .scroll-section {
-  flex: 0 0 100%;
+  flex: none;
   width: 100%;
-  height: 100%;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
   position: relative;
 }
 
-/* Blog: Inhalt darf vertikal scrollen (Header/Footer überlappen) */
+/* Einheitliche Außenabstände der Landingpage-Sektionen */
+.scroll-section.section-shell {
+  padding-inline: 1.5rem;
+  padding-block: 4rem;
+}
+
+@media (min-width: 768px) {
+  .scroll-section.section-shell {
+    padding-inline: 3rem;
+  }
+}
+
+.scroll-section.section-shell--hero {
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .scroll-section.section-shell--hero {
+    padding-inline: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .scroll-section.section-shell--hero {
+    padding-inline: 6rem;
+  }
+}
+
+/* Section-Headline-Block: Eyebrow + H2 + Lead */
+.section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.section-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.section-eyebrow--cyan {
+  color: #22d3ee;
+}
+
+.section-eyebrow--violet {
+  color: #a78bfa;
+}
+
+.section-eyebrow--emerald {
+  color: #34d399;
+}
+
+.section-heading {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.8vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--heading-color, #f8fafc);
+}
+
+.section-lead {
+  margin: 0.15rem 0 0;
+  max-width: 36rem;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+/* Hero-H1: klar über Section-H2 */
+.hero-title {
+  margin: 0;
+  font-size: clamp(2.35rem, 5.5vw, 3.75rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.hero-title .hero-subline {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.hero-title .heading-display {
+  display: block;
+}
+
 .scroll-section.scroll-section--blog {
-  overflow-x: hidden;
-  overflow-y: auto;
-  scroll-snap-align: start;
+  overflow: visible;
 }
 
 /* Fachbegriffe – mehrzeilige Tooltips */
@@ -496,6 +591,13 @@ body {
   width: 100%;
   height: 100%;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .analytics-demo-visual__card {
+    transform: none !important;
+    transition: none !important;
+  }
+}
 .scroll-section--dashboard .dashboard-demo-panel {
   max-height: min(52vh, 480px);
   -webkit-overflow-scrolling: touch;
@@ -528,33 +630,132 @@ body {
 }
 
 .section-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  max-height: none;
+  overflow: visible;
   scrollbar-width: thin;
   overscroll-behavior: contain;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--switcher-border) 70%, transparent);
+  background: color-mix(in srgb, var(--switcher-bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
 }
 
-/* —— Sektions-Reveal beim horizontalen Scroll —— */
+.section-nav__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 9999px;
+  outline: none;
+}
+
+.section-nav__btn:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--switcher-active-text) 55%, transparent);
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  color: var(--switcher-text);
+  background: transparent;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.nav-icon__svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.section-nav__btn:hover .nav-icon {
+  color: var(--switcher-active-text);
+  background: var(--switcher-active-bg);
+  transform: scale(1.06);
+}
+
+.nav-icon--active,
+.section-nav__btn--active .nav-icon {
+  color: var(--switcher-active-text);
+  background: var(--switcher-active-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--switcher-active-text) 35%, transparent);
+  transform: scale(1.08);
+}
+
+.nav-tooltip {
+  position: absolute;
+  right: calc(100% + 0.65rem);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 7.5rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--switcher-border) 80%, transparent);
+  background: color-mix(in srgb, var(--switcher-bg) 96%, transparent);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+  z-index: 2;
+}
+
+.nav-tooltip__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--switcher-active-text);
+  white-space: nowrap;
+}
+
+.nav-tooltip__subtitle {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--switcher-text);
+  white-space: nowrap;
+}
+
+.section-nav__btn:hover .nav-tooltip,
+.section-nav__btn:focus-visible .nav-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+/* —— Sektions-Reveal beim Scroll —— */
 .section-reveal-layer {
-  --section-progress: 0;
-  transform: translate3d(
-    calc((1 - var(--section-progress)) * 28px),
-    calc((1 - var(--section-progress)) * 12px),
-    0
-  );
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-
-.scroll-section.section-in-view .section-reveal-layer {
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: none;
 }
 
 .reveal-group > *,
 .reveal-group--grid > * {
   opacity: 0;
-  transform: translate3d(36px, 18px, 0);
+  transform: translate3d(0, 14px, 0);
   transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .scroll-section.section-in-view .reveal-group > *,
@@ -602,11 +803,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .section-reveal-layer {
-    transform: none !important;
-    transition: none !important;
-  }
-
   .reveal-group > *,
   .reveal-group--grid > * {
     opacity: 1 !important;
@@ -615,9 +811,9 @@ body {
   }
 }
 
-/* Tech-Stack: kompaktes 3×2-Grid, alles ohne Scroll sichtbar */
+/* Tech-Stack: kompaktes Grid */
 .scroll-section.scroll-section--techstack {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .scroll-section--techstack .techstack-grid {
@@ -650,6 +846,50 @@ body {
 
 .techstack-tool-icon img {
   filter: drop-shadow(0 0 0.5px rgba(15, 23, 42, 0.25));
+}
+
+/* Hero-Banner: eine Viewport-Komposition inkl. Blog-Vorschau */
+.hero-banner__frame {
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--glass-highlight, rgba(255, 255, 255, 0.08)) 80%, transparent),
+    0 24px 60px -36px rgba(0, 0, 0, 0.55);
+}
+
+.hero-banner__blog {
+  border-top: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.hero-banner__divider {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .hero-banner__blog {
+    border-top: none;
+  }
+
+  .hero-banner__divider {
+    display: block;
+  }
+}
+
+[data-appearance='light'] .hero-banner__frame {
+  background-color: color-mix(in srgb, var(--glass-bg) 72%, transparent);
+  border-color: color-mix(in srgb, var(--glass-border) 85%, transparent);
+}
+
+[data-appearance='light'] .hero-banner__blog {
+  border-color: color-mix(in srgb, var(--glass-border) 70%, transparent);
+}
+
+[data-appearance='contrast'] .hero-banner__frame {
+  background-color: #000;
+  border-color: #fff;
+  box-shadow: none;
+}
+
+.blog-teaser-box--hero .blog-teaser-slider {
+  transition: opacity 0.35s ease;
 }
 
 /* Undurchsichtige Panels – Farben über themes.css (--glass-*) */

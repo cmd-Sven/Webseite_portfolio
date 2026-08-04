@@ -1,7 +1,7 @@
-import { useViewport } from '../context/ViewportContext'
-
-/** Nur Mobile-Geräte-Vorschau (390px) → vertikal; sonst horizontal */
+/**
+ * Portfolio scrollt immer vertikal (klassische Landingpage).
+ * Der Viewport-Switcher steuert nur die Geräte-Vorschau-Breite, nicht die Scroll-Richtung.
+ */
 export function useVerticalScrollFlow(): boolean {
-  const { viewport } = useViewport()
-  return viewport === 'mobile'
+  return true
 }
