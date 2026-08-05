@@ -458,6 +458,25 @@ body {
   position: relative;
 }
 
+/* About: Hintergrund-Illustration – groß & rechtsbündig (Text links bleibt lesbar) */
+.about-bg-illustration__img {
+  left: auto;
+  right: -4%;
+  height: 100%;
+  width: auto;
+  max-width: 85%;
+  transform: none;
+  object-position: top right;
+}
+
+@media (min-width: 1024px) {
+  .about-bg-illustration__img {
+    right: -8%;
+    height: 108%;
+    max-width: 72%;
+  }
+}
+
 /* Einheitliche Außenabstände der Landingpage-Sektionen */
 .scroll-section.section-shell {
   padding-inline: 1.5rem;

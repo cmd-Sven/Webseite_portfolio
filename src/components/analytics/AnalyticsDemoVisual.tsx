@@ -11,7 +11,7 @@ const DEFAULT_ROTATE = { x: 6, y: -10 }
 
 /**
  * Dekoratives Statistik-Dashboard-Mockup mit leichtem 3D-Tilt zur Maus.
- * Sichtbarkeit steuert der Parent (nur große Breakpoints).
+ * Platzierung (z. B. rechte Spalte der Demo-Sektion) steuert der Parent.
  */
 export function AnalyticsDemoVisual() {
   const frameRef = useRef<HTMLDivElement>(null)

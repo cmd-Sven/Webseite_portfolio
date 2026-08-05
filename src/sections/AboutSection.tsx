@@ -41,7 +41,7 @@ export function AboutSection() {
           alt=""
           width={500}
           height={500}
-          className="absolute left-1/2 top-0 h-[80%] w-[80%] -translate-x-1/2 object-contain object-top opacity-30 sm:opacity-40 lg:opacity-65"
+          className="about-bg-illustration__img absolute top-0 object-contain object-top opacity-30 sm:opacity-40 lg:opacity-65"
           loading="lazy"
           decoding="async"
         />

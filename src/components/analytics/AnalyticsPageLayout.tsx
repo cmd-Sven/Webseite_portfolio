@@ -2,7 +2,6 @@ import { useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Home } from 'lucide-react'
 import { ThemeSwitcher } from '../ThemeSwitcher'
-import { AnalyticsDemoVisual } from './AnalyticsDemoVisual'
 
 interface AnalyticsPageLayoutProps {
   title: string
@@ -53,31 +52,20 @@ export function AnalyticsPageLayout({
       </header>
 
       <main className="max-w-7xl xl:max-w-[88rem] mx-auto px-6 py-10 md:py-14">
-        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] xl:gap-10 2xl:gap-14 xl:items-start">
-          <div className="min-w-0">
-            <div className="mb-8">
-              <span className="text-xs font-mono text-emerald-400 uppercase tracking-widest">
-                interaktive Analysen
-              </span>
-              <h1 className="heading-section text-3xl md:text-4xl font-extrabold tracking-tight mt-2">
-                {title}
-              </h1>
-              <p className="text-sm text-slate-400 mt-2">{subtitle}</p>
-              <span className="inline-block mt-3 text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-400/80 border border-cyan-500/20 rounded-full px-3 py-1">
-                {chartLabel}
-              </span>
-            </div>
-
-            {children}
-          </div>
-
-          <aside className="hidden xl:block xl:sticky xl:top-24 pt-2" aria-hidden="true">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-4 text-center">
-              Dashboard Preview
-            </p>
-            <AnalyticsDemoVisual />
-          </aside>
+        <div className="mb-8">
+          <span className="text-xs font-mono text-emerald-400 uppercase tracking-widest">
+            interaktive Analysen
+          </span>
+          <h1 className="heading-section text-3xl md:text-4xl font-extrabold tracking-tight mt-2">
+            {title}
+          </h1>
+          <p className="text-sm text-slate-400 mt-2">{subtitle}</p>
+          <span className="inline-block mt-3 text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-400/80 border border-cyan-500/20 rounded-full px-3 py-1">
+            {chartLabel}
+          </span>
         </div>
+
+        {children}
       </main>
 
       <footer className="border-t border-slate-800 py-8 text-center">
