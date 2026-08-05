@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowRight, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
-import { formatBlogDate, getLatestBlogPosts, getNewestBlogPost } from '../data/blogPosts'
+import {
+  formatBlogDate,
+  getBlogCoverImage,
+  getLatestBlogPosts,
+  getNewestBlogPost,
+} from '../data/blogPosts'
 import type { BlogPost } from '../types/blog'
 import { PortfolioCard } from './PortfolioCard'
 
@@ -88,12 +93,24 @@ export function BlogTeaserSlider({
         </button>
       </div>
 
-      <article className={`blog-teaser-slider ${isHero ? 'min-h-[8.5rem]' : 'min-h-[7.5rem]'}`}>
+      <article className={`blog-teaser-slider ${isHero ? 'min-h-0' : 'min-h-[7.5rem]'}`}>
         <button
           type="button"
           onClick={() => onOpenPost(post)}
           className="group flex w-full flex-col gap-1.5 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50"
         >
+          {isHero && (
+            <div className="relative mb-1 aspect-[16/10] w-full overflow-hidden rounded-xl border border-slate-800/70 bg-slate-900">
+              <img
+                src={getBlogCoverImage(post)}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
+              />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
+            </div>
+          )}
           <time className="font-mono text-[9px] text-slate-500">{formatBlogDate(post.date)}</time>
           <h3
             className={`heading-section font-bold leading-snug transition-colors group-hover:text-cyan-400 line-clamp-2 ${
@@ -103,8 +120,8 @@ export function BlogTeaserSlider({
             {post.title}
           </h3>
           <p
-            className={`leading-relaxed text-slate-400 line-clamp-3 ${
-              isHero ? 'text-xs md:text-[13px]' : 'text-[11px]'
+            className={`leading-relaxed text-slate-400 ${
+              isHero ? 'text-xs md:text-[13px] line-clamp-2' : 'text-[11px] line-clamp-3'
             }`}
           >
             {post.teaser}

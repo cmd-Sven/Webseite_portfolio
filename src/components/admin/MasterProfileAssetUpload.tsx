@@ -201,7 +201,8 @@ export function MasterProfileAssetUpload({ userId, assets, onChange, onError }: 
         <h3 className="text-sm font-medium text-zinc-900">Dokumente & Medien</h3>
         <p className="text-xs text-zinc-500 mt-0.5">
           Private Uploads in Supabase Storage (Bucket <code className="text-[11px]">master-profile</code>
-          ).
+          ). Der Lebenslauf wird zusätzlich nach{' '}
+          <code className="text-[11px]">portfolio-public/lebenslauf.pdf</code> gespiegelt (Landingpage).
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

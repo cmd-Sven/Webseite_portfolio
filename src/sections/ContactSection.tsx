@@ -20,7 +20,12 @@ export function ContactSection() {
                 <PortfolioCardSm glow="card-glow--cyan-violet" className="w-10 h-10 !p-0 flex items-center justify-center text-cyan-400">
                   <Mail className="w-5 h-5" />
                 </PortfolioCardSm>
-                <span>sven.sieber@example.com</span>
+                <a
+                  href="mailto:designer@sven-sieber.de"
+                  className="hover:text-cyan-400 transition-colors"
+                >
+                  designer@sven-sieber.de
+                </a>
               </div>
               <div className="flex items-center gap-3 text-slate-300 text-sm">
                 <PortfolioCardSm glow="card-glow--cyan-violet" className="w-10 h-10 !p-0 flex items-center justify-center text-cyan-400">

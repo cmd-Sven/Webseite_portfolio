@@ -4,6 +4,9 @@ import { PortfolioCard } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
 
+/** Animiertes WebP (1:1, nicht neu gerendert — Optimizer würde Frames killen). */
+const ABOUT_ILLUSTRATION_SRC = '/about/animation-sieber-computer.webp'
+
 function LinkedInIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -24,78 +27,106 @@ export function AboutSection() {
   const { linkedInUrl, xingUrl, location, role, paragraphs, highlights } = ABOUT_PROFILE
 
   return (
-    <section id="about" className="scroll-section section-shell flex items-center justify-center">
-      <SectionRevealLayer className="max-w-3xl w-full">
-        <RevealGroup className="about-columns flex flex-col gap-6">
-          <SectionHeader eyebrow="Profil" title="Über mich" accent="cyan" />
+    <section
+      id="about"
+      className="scroll-section section-shell relative flex items-center justify-center overflow-hidden"
+    >
+      {/* Vollflächen-Hintergrund hinter beiden Spalten */}
+      <div
+        className="about-bg-illustration pointer-events-none absolute inset-0 z-0"
+        aria-hidden="true"
+      >
+        <img
+          src={ABOUT_ILLUSTRATION_SRC}
+          alt=""
+          width={500}
+          height={500}
+          className="absolute left-1/2 top-0 h-[80%] w-[80%] -translate-x-1/2 object-contain object-top opacity-30 sm:opacity-40 lg:opacity-65"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
 
-          <PortfolioCard glow="card-glow--cyan-violet" hover="cyan" className="about-profile-card flex flex-col gap-6 p-6 sm:p-8 md:p-9">
-            <header className="flex flex-wrap items-center gap-4 border-b border-slate-800/80 pb-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-400 to-violet-500 text-2xl font-black text-slate-950">
-                S
+      <SectionRevealLayer className="relative z-10 max-w-5xl w-full">
+        <RevealGroup className="about-columns flex flex-col gap-6 lg:flex-row lg:items-stretch lg:gap-8">
+          <div className="flex min-w-0 flex-1 flex-col gap-6 lg:max-w-xl">
+            <SectionHeader eyebrow="Profil" title="Über mich" accent="cyan" />
+
+            <PortfolioCard
+              glow="card-glow--cyan-violet"
+              hover="cyan"
+              className="about-profile-card relative z-10 flex flex-col gap-6 p-6 sm:p-8 md:p-9"
+            >
+              <header className="flex flex-wrap items-center gap-4 border-b border-slate-800/80 pb-5">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-400 to-violet-500 text-2xl font-black text-slate-950">
+                  S
+                </div>
+                <div className="min-w-0 space-y-1.5">
+                  <p className="heading-section text-lg font-bold sm:text-xl">Sven Sieber</p>
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      <User className="h-3.5 w-3.5 text-violet-400" />
+                      {role}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-cyan-400" />
+                      {location}
+                    </span>
+                  </p>
+                </div>
+              </header>
+
+              <div className="space-y-3.5 text-sm leading-relaxed text-slate-300 md:text-[15px]">
+                {paragraphs.map((text, index) => (
+                  <p key={index}>{text}</p>
+                ))}
               </div>
-              <div className="min-w-0 space-y-1.5">
-                <p className="heading-section text-lg font-bold sm:text-xl">Sven Sieber</p>
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                  <span className="inline-flex items-center gap-1">
-                    <User className="h-3.5 w-3.5 text-violet-400" />
-                    {role}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-cyan-400" />
-                    {location}
-                  </span>
+
+              <ul className="grid gap-2 sm:grid-cols-1">
+                {highlights.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-2 rounded-xl border border-slate-800/60 bg-slate-950/40 px-3 py-2.5 text-xs text-slate-400"
+                  >
+                    <span className="mt-0.5 text-cyan-400">▸</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto space-y-3 border-t border-slate-800/80 pt-5">
+                <p className="text-xs leading-relaxed text-slate-400">
+                  Vernetze dich gerne auf LinkedIn oder Xing – dort teile ich Updates zu Projekten,
+                  Datenanalyse und Frontend-Themen.
                 </p>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href={linkedInUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-sm flex-1 gap-2 border border-[#0a66c2]/50 bg-[#0a66c2]/20 font-semibold normal-case text-slate-100 hover:border-[#0a66c2] hover:bg-[#0a66c2]/35"
+                    aria-label="LinkedIn-Profil von Sven Sieber (öffnet in neuem Tab)"
+                  >
+                    <LinkedInIcon className="h-4 w-4 shrink-0" />
+                    LinkedIn
+                  </a>
+                  <a
+                    href={xingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-sm flex-1 gap-2 border border-[#026466]/60 bg-[#026466]/25 font-semibold normal-case text-slate-100 hover:border-[#026466] hover:bg-[#026466]/40"
+                    aria-label="Xing-Profil von Sven Sieber (öffnet in neuem Tab)"
+                  >
+                    <XingIcon className="h-4 w-4 shrink-0" />
+                    Xing
+                  </a>
+                </div>
               </div>
-            </header>
+            </PortfolioCard>
+          </div>
 
-            <div className="space-y-3.5 text-sm leading-relaxed text-slate-300 md:text-[15px]">
-              {paragraphs.map((text, index) => (
-                <p key={index}>{text}</p>
-              ))}
-            </div>
-
-            <ul className="grid gap-2 sm:grid-cols-1">
-              {highlights.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-2 rounded-xl border border-slate-800/60 bg-slate-950/40 px-3 py-2.5 text-xs text-slate-400"
-                >
-                  <span className="mt-0.5 text-cyan-400">▸</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-auto space-y-3 border-t border-slate-800/80 pt-5">
-              <p className="text-xs leading-relaxed text-slate-400">
-                Vernetze dich gerne auf LinkedIn oder Xing – dort teile ich Updates zu Projekten, Datenanalyse
-                und Frontend-Themen.
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <a
-                  href={linkedInUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-sm flex-1 gap-2 border border-[#0a66c2]/50 bg-[#0a66c2]/20 font-semibold normal-case text-slate-100 hover:border-[#0a66c2] hover:bg-[#0a66c2]/35"
-                  aria-label="LinkedIn-Profil von Sven Sieber (öffnet in neuem Tab)"
-                >
-                  <LinkedInIcon className="h-4 w-4 shrink-0" />
-                  LinkedIn
-                </a>
-                <a
-                  href={xingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-sm flex-1 gap-2 border border-[#026466]/60 bg-[#026466]/25 font-semibold normal-case text-slate-100 hover:border-[#026466] hover:bg-[#026466]/40"
-                  aria-label="Xing-Profil von Sven Sieber (öffnet in neuem Tab)"
-                >
-                  <XingIcon className="h-4 w-4 shrink-0" />
-                  Xing
-                </a>
-              </div>
-            </div>
-          </PortfolioCard>
+          {/* Spalte 2: Leerplatz für visuelle Balance */}
+          <div className="hidden min-h-0 flex-1 lg:block" aria-hidden="true" />
         </RevealGroup>
       </SectionRevealLayer>
     </section>

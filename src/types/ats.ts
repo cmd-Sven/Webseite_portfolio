@@ -286,6 +286,10 @@ export type RewriteCoverBlockResponse = {
 
 export const MASTER_PROFILE_STORAGE_BUCKET = 'master-profile'
 
+/** Öffentlicher Bucket für den Landingpage-Lebenslauf (ohne Login). */
+export const PORTFOLIO_PUBLIC_STORAGE_BUCKET = 'portfolio-public'
+export const PORTFOLIO_PUBLIC_CV_OBJECT = 'lebenslauf.pdf'
+
 export type MasterProfileAssetKind = 'cv_pdf' | 'photo' | 'signature'
 
 // ---------------------------------------------------------------------------

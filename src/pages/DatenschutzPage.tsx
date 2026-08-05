@@ -15,7 +15,10 @@ export function DatenschutzPage() {
           <br />
           [PLZ Ort]
           <br />
-          E-Mail: [ihre.email@beispiel.de]
+          E-Mail:{' '}
+          <a href="mailto:designer@sven-sieber.de" className="text-cyan-400 hover:underline">
+            designer@sven-sieber.de
+          </a>
         </p>
       </section>
 

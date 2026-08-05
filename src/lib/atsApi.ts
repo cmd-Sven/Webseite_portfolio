@@ -17,7 +17,12 @@ import type {
   RewriteCoverBlockRequest,
   RewriteCoverBlockResponse,
 } from '../types/ats'
-import { EMPTY_MASTER_PROFILE_CONTENT, MASTER_PROFILE_STORAGE_BUCKET } from '../types/ats'
+import {
+  EMPTY_MASTER_PROFILE_CONTENT,
+  MASTER_PROFILE_STORAGE_BUCKET,
+  PORTFOLIO_PUBLIC_CV_OBJECT,
+  PORTFOLIO_PUBLIC_STORAGE_BUCKET,
+} from '../types/ats'
 
 async function invokeErrorMessage(error: {
   message?: string
@@ -364,6 +369,29 @@ function extensionForFile(file: File, kind: MasterProfileAssetKind): string {
   return 'jpg'
 }
 
+/** Spiegelt den Master-CV in den öffentlichen Portfolio-Bucket (Landingpage-Download). */
+async function mirrorCvToPortfolioPublic(
+  file: File | Blob,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.storage
+    .from(PORTFOLIO_PUBLIC_STORAGE_BUCKET)
+    .upload(PORTFOLIO_PUBLIC_CV_OBJECT, file, {
+      upsert: true,
+      contentType: 'application/pdf',
+      cacheControl: '300',
+    })
+  if (error) return { error: error.message }
+  return { error: null }
+}
+
+async function removeMirroredPortfolioCv(): Promise<{ error: string | null }> {
+  const { error } = await supabase.storage
+    .from(PORTFOLIO_PUBLIC_STORAGE_BUCKET)
+    .remove([PORTFOLIO_PUBLIC_CV_OBJECT])
+  if (error) return { error: error.message }
+  return { error: null }
+}
+
 export async function uploadMasterProfileAsset(
   userId: string,
   kind: MasterProfileAssetKind,
@@ -382,6 +410,17 @@ export async function uploadMasterProfileAsset(
     })
 
   if (error) return { path: null, error: error.message }
+
+  if (kind === 'cv_pdf') {
+    const mirrored = await mirrorCvToPortfolioPublic(file)
+    if (mirrored.error) {
+      return {
+        path,
+        error: `Privat gespeichert, öffentlicher Spiegel fehlgeschlagen: ${mirrored.error}`,
+      }
+    }
+  }
+
   return { path, error: null }
 }
 
@@ -390,6 +429,15 @@ export async function removeMasterProfileAsset(
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.storage.from(MASTER_PROFILE_STORAGE_BUCKET).remove([path])
   if (error) return { error: error.message }
+
+  const isCv = path.endsWith('/cv.pdf') || path === 'cv.pdf'
+  if (isCv) {
+    const mirrored = await removeMirroredPortfolioCv()
+    if (mirrored.error) {
+      return { error: `Privat entfernt, öffentlicher Spiegel fehlgeschlagen: ${mirrored.error}` }
+    }
+  }
+
   return { error: null }
 }
 

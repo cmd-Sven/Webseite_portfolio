@@ -23,4 +23,12 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'contact', title: 'Kontakt', subtitle: 'Nachricht senden' },
 ]
 
-export const RESUME_PDF_PATH = '/documents/lebenslauf.pdf'
+/**
+ * Landingpage-Lebenslauf: öffentliches Storage-Objekt (Admin-Upload spiegelt dorthin).
+ * Fallback: lokales Vite-Static unter public/documents/.
+ */
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? '').trim().replace(/\/$/, '')
+
+export const RESUME_PDF_PATH = supabaseUrl
+  ? `${supabaseUrl}/storage/v1/object/public/portfolio-public/lebenslauf.pdf`
+  : '/documents/lebenslauf.pdf'
