@@ -1,11 +1,12 @@
-# Lebenslauf
+# Lebenslauf (lokal, nicht in Git)
 
-Der Landingpage-Button „Lebenslauf“ lädt das **öffentliche** Storage-Objekt:
+PDFs in diesem Ordner sind **gitignored** und gehören nicht ins öffentliche Repo.
 
-`portfolio-public/lebenslauf.pdf`
+Die Live-Landingpage nutzt **`/api/resume`**, das eine kurzlebige Signed URL
+aus Supabase Storage (`portfolio-public/lebenslauf.pdf`) liefert.
+Beim Admin-Upload des Master-Lebenslaufs wird dorthin gespiegelt.
 
-Beim Admin-Upload des Master-Lebenslaufs wird dorthin automatisch gespiegelt.
+Optional lokal (nur Dev / Fallback ohne API):
 
-Optional lokal (Dev / Fallback ohne `VITE_SUPABASE_URL`):
-
-**`lebenslauf.pdf`** in diesem Ordner → `/documents/lebenslauf.pdf`
+**`lebenslauf.pdf`** hier ablegen → erreichbar als `/documents/lebenslauf.pdf`
+(wenn `/api/resume` nicht läuft, z. B. reines `vite` ohne `vercel dev`).

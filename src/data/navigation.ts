@@ -24,11 +24,9 @@ export const NAV_SECTIONS: NavSection[] = [
 ]
 
 /**
- * Landingpage-Lebenslauf: öffentliches Storage-Objekt (Admin-Upload spiegelt dorthin).
- * Fallback: lokales Vite-Static unter public/documents/.
+ * Landingpage-Lebenslauf: Production nutzt `/api/resume` (kurzlebige Signed URL).
+ * Lokal (reines Vite ohne API): Fallback auf gitignored Dev-PDF.
  */
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? '').trim().replace(/\/$/, '')
-
-export const RESUME_PDF_PATH = supabaseUrl
-  ? `${supabaseUrl}/storage/v1/object/public/portfolio-public/lebenslauf.pdf`
-  : '/documents/lebenslauf.pdf'
+export const RESUME_PDF_PATH = import.meta.env.DEV
+  ? '/documents/lebenslauf.pdf'
+  : '/api/resume'
