@@ -4,13 +4,13 @@ export function ImpressumPage() {
   return (
     <LegalPageLayout title="Impressum">
       <section>
-        <h2 className="heading-section text-lg font-bold">Angaben gemäß § 5 TMG</h2>
+        <h2 className="heading-section text-lg font-bold">Angaben gemäß § 5 DDG</h2>
         <p>
-          <strong>[Vorname Nachname – Platzhalter]</strong>
+          <strong>Sven Sieber</strong>
           <br />
-          [Straße und Hausnummer]
+          Ostlandweg 16
           <br />
-          [PLZ Ort]
+          49205 Hasbergen
           <br />
           Deutschland
         </p>
@@ -19,7 +19,10 @@ export function ImpressumPage() {
       <section>
         <h2 className="heading-section text-lg font-bold">Kontakt</h2>
         <p>
-          Telefon: [Telefonnummer]
+          Telefon:{' '}
+          <a href="tel:+491773878350" className="text-cyan-400 hover:underline">
+            0177 3878350
+          </a>
           <br />
           E-Mail:{' '}
           <a href="mailto:designer@sven-sieber.de" className="text-cyan-400 hover:underline">
@@ -31,9 +34,11 @@ export function ImpressumPage() {
       <section>
         <h2 className="heading-section text-lg font-bold">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
         <p>
-          [Vorname Nachname]
+          Sven Sieber
           <br />
-          [Anschrift wie oben]
+          Ostlandweg 16
+          <br />
+          49205 Hasbergen
         </p>
       </section>
 
@@ -60,11 +65,6 @@ export function ImpressumPage() {
           Verbraucherschlichtungsstelle teilzunehmen.
         </p>
       </section>
-
-      <p className="text-xs text-slate-500 italic">
-        Hinweis: Diese Seite enthält Platzhalterdaten. Bitte ersetzen Sie alle Felder in eckigen
-        Klammern durch Ihre echten Angaben vor der Veröffentlichung.
-      </p>
     </LegalPageLayout>
   )
 }

@@ -146,6 +146,107 @@ body {
   outline-color: var(--accent);
 }
 
+/* Isolierte Design-Token-Demo (Blog) – eigene Appearance, unabhängig vom Seiten-Theme */
+.design-tokens-demo {
+  --demo-surface: #1e293b;
+  --demo-text: #f8fafc;
+  --demo-muted: #94a3b8;
+  --demo-border: #334155;
+  --demo-accent: #22d3ee;
+  --demo-accent-text: #0f172a;
+  --demo-outer-bg: rgba(15, 23, 42, 0.55);
+  --demo-label: #64748b;
+  background: var(--demo-outer-bg);
+  border-color: var(--demo-border);
+  color: var(--demo-text);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.design-tokens-demo[data-appearance='light'] {
+  --demo-surface: #ffffff;
+  --demo-text: #0f172a;
+  --demo-muted: #64748b;
+  --demo-border: #94a3b8;
+  --demo-accent: #0891b2;
+  --demo-accent-text: #ffffff;
+  --demo-outer-bg: #f1f5f9;
+  --demo-label: #64748b;
+}
+
+.design-tokens-demo[data-appearance='dark'] {
+  --demo-surface: #1e293b;
+  --demo-text: #f8fafc;
+  --demo-muted: #94a3b8;
+  --demo-border: #334155;
+  --demo-accent: #22d3ee;
+  --demo-accent-text: #0f172a;
+  --demo-outer-bg: rgba(15, 23, 42, 0.55);
+  --demo-label: #64748b;
+}
+
+.design-tokens-demo[data-appearance='contrast'] {
+  --demo-surface: #000000;
+  --demo-text: #ffffff;
+  --demo-muted: #ffffff;
+  --demo-border: #ffffff;
+  --demo-accent: #ffff00;
+  --demo-accent-text: #000000;
+  --demo-outer-bg: #000000;
+  --demo-label: #ffffff;
+}
+
+.design-tokens-demo__label {
+  color: var(--demo-label);
+}
+
+.design-tokens-demo__switcher {
+  background: var(--demo-surface);
+  border-color: var(--demo-border);
+}
+
+.design-tokens-demo__btn {
+  color: var(--demo-muted);
+}
+
+.design-tokens-demo__btn--active {
+  background: color-mix(in srgb, var(--demo-accent) 18%, transparent);
+  color: var(--demo-accent);
+}
+
+.design-tokens-demo[data-appearance='contrast'] .design-tokens-demo__btn--active {
+  background: var(--demo-accent);
+  color: var(--demo-accent-text);
+}
+
+.design-tokens-demo__btn:focus-visible {
+  outline-color: var(--demo-accent);
+}
+
+.design-tokens-demo__card {
+  background: var(--demo-surface);
+  border-color: var(--demo-border);
+  color: var(--demo-text);
+}
+
+.design-tokens-demo__muted {
+  color: var(--demo-muted);
+}
+
+.design-tokens-demo__chip {
+  background: color-mix(in srgb, var(--demo-surface) 80%, var(--demo-text) 8%);
+  border-color: var(--demo-border);
+  color: var(--demo-muted);
+}
+
+.design-tokens-demo__cta {
+  background: var(--demo-accent);
+  color: var(--demo-accent-text);
+}
+
+.design-tokens-demo__apply {
+  color: var(--demo-accent);
+}
+
 /* Glass & Tool-Zellen aus Variablen */
 .glass-panel {
   background-color: var(--glass-bg) !important;
@@ -278,6 +379,14 @@ body {
   border-width: var(--glass-border-width, 1.5px);
   border-style: solid;
   box-shadow: inset 0 1px 0 0 #ffffff;
+}
+
+[data-appearance='light'] .techstack-category-heading {
+  border-bottom-color: #cbd5e1;
+}
+
+[data-appearance='contrast'] .techstack-category-heading {
+  border-bottom-color: #ffffff;
 }
 
 [data-appearance='light'] .techstack-tool-icon {
@@ -822,4 +931,45 @@ body {
 
 [data-appearance='contrast'] .vue-showcase-root * {
   animation: none !important;
+}
+
+/* Design-Token-Demo: Textfarben gegen globale Theme-Overrides absichern */
+.portfolio-page .design-tokens-demo .design-tokens-demo__card h4,
+.portfolio-page .design-tokens-demo .design-tokens-demo__label,
+.portfolio-page .design-tokens-demo .design-tokens-demo__muted,
+.portfolio-page .design-tokens-demo .design-tokens-demo__chip,
+.portfolio-page .design-tokens-demo .design-tokens-demo__btn,
+.portfolio-page .design-tokens-demo .design-tokens-demo__apply {
+  color: inherit;
+}
+
+.portfolio-page .design-tokens-demo .design-tokens-demo__card h4 {
+  color: var(--demo-text);
+}
+
+.portfolio-page .design-tokens-demo .design-tokens-demo__label {
+  color: var(--demo-label);
+}
+
+.portfolio-page .design-tokens-demo .design-tokens-demo__muted,
+.portfolio-page .design-tokens-demo .design-tokens-demo__chip,
+.portfolio-page .design-tokens-demo .design-tokens-demo__btn {
+  color: var(--demo-muted);
+}
+
+.portfolio-page .design-tokens-demo .design-tokens-demo__btn--active {
+  color: var(--demo-accent);
+}
+
+.portfolio-page .design-tokens-demo[data-appearance='contrast'] .design-tokens-demo__btn--active {
+  color: var(--demo-accent-text);
+}
+
+.portfolio-page .design-tokens-demo .design-tokens-demo__apply,
+.portfolio-page .design-tokens-demo .design-tokens-demo__cta {
+  color: var(--demo-accent);
+}
+
+.portfolio-page .design-tokens-demo .design-tokens-demo__cta {
+  color: var(--demo-accent-text);
 }

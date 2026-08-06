@@ -1,11 +1,39 @@
 import { Calendar, Clock, Tag } from 'lucide-react'
+import { Fragment, type ReactNode } from 'react'
 import { formatBlogDate, getBlogCoverImage } from '../data/blogPosts'
 import type { BlogPost } from '../types/blog'
+import { BlogTermHint } from './BlogTermHint'
+import { DesignTokensDemo } from './DesignTokensDemo'
 import { PortfolioCard } from './PortfolioCard'
 
 interface BlogPostModalProps {
   post: BlogPost
   onClose: () => void
+}
+
+const THEME_DEMO_MARKER = '{{theme-demo}}'
+const TERM_MARKER_RE = /\{\{term:([^}]+)\}\}/g
+
+function renderTerms(text: string, keyPrefix: string) {
+  const nodes: ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  const re = new RegExp(TERM_MARKER_RE.source, 'g')
+
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index))
+    }
+    const termKey = match[1].trim()
+    nodes.push(<BlogTermHint key={`${keyPrefix}-term-${match.index}`} termKey={termKey} />)
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex))
+  }
+
+  return nodes.length > 0 ? nodes : text
 }
 
 function renderInline(text: string) {
@@ -15,20 +43,24 @@ function renderInline(text: string) {
     if (bold) {
       return (
         <strong key={i} className="font-semibold text-slate-100">
-          {bold[1]}
+          {renderTerms(bold[1], `b${i}`)}
         </strong>
       )
     }
-    return part
+    return <Fragment key={i}>{renderTerms(part, `p${i}`)}</Fragment>
   })
 }
 
 function renderContentBlock(block: string, index: number) {
+  if (block.trim() === THEME_DEMO_MARKER) {
+    return <DesignTokensDemo key={index} />
+  }
+
   const heading = block.match(/^##\s+(.+)$/)
   if (heading) {
     return (
       <h3 key={index} className="heading-section text-base font-bold pt-1">
-        {heading[1]}
+        {renderInline(heading[1])}
       </h3>
     )
   }

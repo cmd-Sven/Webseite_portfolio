@@ -14,26 +14,33 @@ export function TechStackSection() {
         <RevealGroup className="flex flex-col gap-6">
           <SectionHeader eyebrow="Toolbox & Technologien" title="Software & Stack" accent="cyan" />
 
-          <RevealGroup grid className="techstack-grid grid grid-cols-3 gap-2 sm:gap-3 min-w-0">
+          <RevealGroup
+            grid
+            className="techstack-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-stretch min-w-0"
+          >
             {TECH_STACK_DATA.map((group, idx) => (
               <div key={idx} className="techstack-card-slot">
                 <PortfolioCard
                   glow="card-glow--cyan-violet"
                   hover="cyan"
-                  className="portfolio-card--compact"
+                  className="portfolio-card--compact h-full flex flex-col"
                 >
-                  <h3 className="text-[10px] font-mono text-cyan-400 font-bold mb-2 tracking-wide uppercase pb-1.5 flex items-center gap-1.5">
-                    <Cpu className="w-3 h-3 text-violet-400 shrink-0" />
-                    <span className="leading-tight">{group.category}</span>
+                  <h3 className="techstack-category-heading text-[11px] font-mono text-cyan-400 font-bold mb-3 tracking-wide uppercase flex items-center gap-1.5 shrink-0">
+                    <Cpu className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                    <span className="leading-snug">{group.category}</span>
                   </h3>
 
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div
+                    className={`techstack-tools-grid flex-1 ${
+                      group.tools.length === 5 ? 'techstack-tools-grid--count-5' : ''
+                    }`}
+                  >
                     {group.tools.map((tool, tIdx) => (
                       <div
                         key={tIdx}
-                        className="techstack-tool-cell flex flex-col items-center justify-center gap-1 p-1.5 rounded-lg text-center"
+                        className="techstack-tool-cell flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg text-center"
                       >
-                        <div className="techstack-tool-icon w-8 h-8 rounded-md flex items-center justify-center shrink-0 p-1">
+                        <div className="techstack-tool-icon w-9 h-9 rounded-md flex items-center justify-center shrink-0 p-1">
                           <img
                             src={tool.img}
                             alt={`${tool.name} Icon`}
@@ -44,7 +51,7 @@ export function TechStackSection() {
                             }}
                           />
                         </div>
-                        <span className="text-[8px] text-slate-200 font-medium leading-tight line-clamp-2">
+                        <span className="techstack-tool-label text-[9px] text-slate-200 font-medium leading-tight line-clamp-2">
                           {tool.name}
                         </span>
                       </div>
