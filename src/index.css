@@ -477,6 +477,27 @@ body {
   }
 }
 
+/* Light: Illustration nicht über Section-Titel/Lead legen */
+[data-appearance='light'] .about-bg-illustration__img {
+  opacity: 0.18 !important;
+}
+
+@media (min-width: 640px) {
+  [data-appearance='light'] .about-bg-illustration__img {
+    opacity: 0.22 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-appearance='light'] .about-bg-illustration__img {
+    opacity: 0.28 !important;
+  }
+}
+
+[data-appearance='contrast'] .about-bg-illustration {
+  display: none;
+}
+
 /* Einheitliche Außenabstände der Landingpage-Sektionen */
 .scroll-section.section-shell {
   padding-inline: 1.5rem;
@@ -548,7 +569,7 @@ body {
   max-width: 36rem;
   font-size: 0.75rem;
   line-height: 1.55;
-  color: #94a3b8;
+  color: var(--heading-muted, #94a3b8);
 }
 
 /* Hero-H1: klar über Section-H2 */
@@ -566,7 +587,7 @@ body {
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 1.45;
-  color: #94a3b8;
+  color: var(--heading-muted, #94a3b8);
 }
 
 .hero-title .heading-display {
@@ -835,12 +856,43 @@ body {
   overflow: visible;
 }
 
-.scroll-section--techstack .techstack-grid {
+.scroll-section--techstack .techstack-inner {
   overflow: visible;
 }
 
-.scroll-section--techstack .techstack-grid > .card-glow {
+.scroll-section--techstack .techstack-grid {
+  overflow: visible;
+  padding: 0.35rem;
+}
+
+.scroll-section--techstack .techstack-card-slot {
+  min-width: 0;
+  overflow: visible;
+}
+
+.scroll-section--techstack .techstack-grid .card-glow {
   margin: 0.35rem;
+  transform-origin: center center;
+}
+
+/* Hover: ganze Card inkl. Inhalt skalieren (nur echte Pointer-Hover, kein Mobile-Sticky) */
+@media (hover: hover) and (pointer: fine) {
+  .scroll-section--techstack .techstack-grid .card-glow {
+    z-index: 0;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), z-index 0s linear;
+  }
+
+  .scroll-section--techstack .techstack-grid .card-glow:hover {
+    z-index: 10;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-section--techstack .techstack-grid .card-glow {
+    transition: none !important;
+    transform: none !important;
+  }
 }
 
 .scroll-section--techstack .card-glow--compact::after {
@@ -893,12 +945,28 @@ body {
 }
 
 [data-appearance='light'] .hero-banner__frame {
-  background-color: color-mix(in srgb, var(--glass-bg) 72%, transparent);
+  background-color: color-mix(in srgb, var(--glass-bg) 92%, transparent);
   border-color: color-mix(in srgb, var(--glass-border) 85%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 #ffffff,
+    0 18px 48px -28px rgba(15, 23, 42, 0.18);
 }
 
 [data-appearance='light'] .hero-banner__blog {
   border-color: color-mix(in srgb, var(--glass-border) 70%, transparent);
+}
+
+/* Hero-Badge: höhere Spezifität als Tailwind-Remaps (.text-cyan-400 / .bg-cyan-950) */
+[data-appearance='light'] .portfolio-page .hero-badge {
+  color: #155e75 !important;
+  background-color: #ecfeff !important;
+  border-color: color-mix(in srgb, #0e7490 40%, #a5f3fc) !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .hero-badge {
+  color: #ffff00 !important;
+  background-color: #000000 !important;
+  border-color: #ffff00 !important;
 }
 
 [data-appearance='contrast'] .hero-banner__frame {

@@ -6,8 +6,12 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 
-const MAX_TILT = 9
-const DEFAULT_ROTATE = { x: 6, y: -10 }
+const BASE_TILT = { x: 6, y: -10 }
+const MOUSE_TILT = 5
+
+function clampTilt(value: number, max: number) {
+  return Math.max(-max, Math.min(max, value))
+}
 
 /**
  * Dekoratives Statistik-Dashboard-Mockup mit leichtem 3D-Tilt zur Maus.
@@ -15,52 +19,62 @@ const DEFAULT_ROTATE = { x: 6, y: -10 }
  */
 export function AnalyticsDemoVisual() {
   const frameRef = useRef<HTMLDivElement>(null)
-  const [rotate, setRotate] = useState(DEFAULT_ROTATE)
+  const [rotate, setRotate] = useState(BASE_TILT)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [canHoverTilt, setCanHoverTilt] = useState(false)
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const reducedMq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const hoverMq = window.matchMedia('(hover: hover) and (pointer: fine)')
+
     const sync = () => {
-      setReducedMotion(mq.matches)
-      if (mq.matches) setRotate({ x: 0, y: 0 })
-      else setRotate(DEFAULT_ROTATE)
+      const reduced = reducedMq.matches
+      const hover = hoverMq.matches && !reduced
+      setReducedMotion(reduced)
+      setCanHoverTilt(hover)
+      setRotate(reduced ? { x: 0, y: 0 } : BASE_TILT)
     }
+
     sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
+    reducedMq.addEventListener('change', sync)
+    hoverMq.addEventListener('change', sync)
+    return () => {
+      reducedMq.removeEventListener('change', sync)
+      hoverMq.removeEventListener('change', sync)
+    }
   }, [])
 
   const onPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (reducedMotion) return
+      if (!canHoverTilt) return
       const el = frameRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
       const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1
       const ny = ((event.clientY - rect.top) / rect.height) * 2 - 1
       setRotate({
-        x: Math.max(-MAX_TILT, Math.min(MAX_TILT, -ny * MAX_TILT)),
-        y: Math.max(-MAX_TILT, Math.min(MAX_TILT, nx * MAX_TILT)),
+        x: BASE_TILT.x + clampTilt(-ny * MOUSE_TILT, MOUSE_TILT),
+        y: BASE_TILT.y + clampTilt(nx * MOUSE_TILT, MOUSE_TILT),
       })
     },
-    [reducedMotion],
+    [canHoverTilt],
   )
 
   const onPointerLeave = useCallback(() => {
-    if (reducedMotion) return
-    setRotate(DEFAULT_ROTATE)
-  }, [reducedMotion])
+    if (!canHoverTilt) return
+    setRotate(BASE_TILT)
+  }, [canHoverTilt])
 
   return (
     <div
       ref={frameRef}
       className="analytics-demo-visual relative select-none"
-      onPointerMove={onPointerMove}
-      onPointerLeave={onPointerLeave}
+      onPointerMove={canHoverTilt ? onPointerMove : undefined}
+      onPointerLeave={canHoverTilt ? onPointerLeave : undefined}
       aria-hidden="true"
     >
       <div
-        className="analytics-demo-visual__stage relative mx-auto w-full max-w-[340px]"
+        className="analytics-demo-visual__stage relative mx-auto w-full max-w-[380px]"
         style={{ perspective: '900px' }}
       >
         <div
@@ -73,7 +87,7 @@ export function AnalyticsDemoVisual() {
             transformOrigin: 'center center',
             transition: reducedMotion
               ? undefined
-              : 'transform 0.15s ease-out',
+              : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
             willChange: reducedMotion ? undefined : 'transform',
           }}
         >

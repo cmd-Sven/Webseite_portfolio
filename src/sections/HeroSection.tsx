@@ -64,7 +64,7 @@ export function HeroSection({ onScrollTo, onOpenBlogPost }: HeroSectionProps) {
                   <a
                     href={RESUME_PDF_PATH}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="btn btn-outline gap-2 border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-white"
                   >
                     <FileText className="h-4 w-4" />

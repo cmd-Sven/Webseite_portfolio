@@ -29,14 +29,30 @@ Ein simulierter oder echter A/B-Test braucht klare Stopp-Kriterien. Chi-Quadrat 
     date: '2026-04-12',
     coverImage: '/blog/react-vue-bridge.webp',
     teaser:
-      'Ein pragmatischer Blick auf Vue-Web-Components in React – ohne Overhead, aber mit klaren Integrationsgrenzen.',
-    content: `Nicht jedes Team braucht ein separates Vue-Bundle. Für isolierte Widgets – Rechner, Konfiguratoren, Legacy-Module – reicht oft eine Vue-3-Island, die über Custom Elements oder einen kleinen Mount-Point in React läuft.
+      'Deine Haupt-App läuft in React, aber für einen Rechner oder Konfigurator will ein Team Vue nutzen? Mit Vue-Islands geht das – ohne die ganze App neu zu schreiben.',
+    content: `Deine Haupt-App läuft in React, aber für einen bestimmten Rechner oder Konfigurator will ein Team unbedingt Vue nutzen? Kein Grund, die ganze App neu zu schreiben.
 
-Wichtig sind Verträge: Welche Props gehen rein, welche Events gehen raus, und wer besitzt den globalen State? Ich halte die Shell in React, Vue bleibt feature-kapselt.
+Für solche isolierten Bausteine reicht oft eine Vue-Island. Das ist ein kleines Vue-Modul, das sich unauffällig in deine React-Umgebung einklinkt – wie ein maßgefertigtes Regal, das perfekt in eine bestehende Wand passt.
 
-Der Vorteil: Spezialisierte Teams können in ihrem Stack bleiben, das Portfolio bleibt eine kohärente Experience. Der Nachteil: Zwei Build-Pipelines und doppelte Design-Tokens, wenn man sie nicht aktiv synchronisiert.`,
+## Die drei goldenen Regeln der Zusammenarbeit
+
+Damit sich React und Vue nicht in die Quere kommen, brauchst du klare Absprachen:
+
+**Daten rein (Props):** Welche Infos bekommt Vue von React? (z. B. den aktuellen User-Status).
+
+**Signale raus (Events):** Wie sagt Vue Bescheid, wenn der Nutzer fertig ist? (z. B. „Der Rechner ist durch, aktualisiere den Warenkorb!“).
+
+**Der Chef bleibt React:** Die Haupt-App behält die Kontrolle. Vue kümmert sich nur isoliert um sein eigenes kleines Revier.
+
+## Lohnt sich das?
+
+**Das Gute:** Spezialisierte Teams können in ihrem gewohnten Stack arbeiten, während der Nutzer am Ende eine völlig nahtlose App erlebt.
+
+**Das Schlechte:** Du holst dir zwei Build-Pipelines ins Projekt und musst aktiv aufpassen, dass Design-Elemente (wie Buttons oder Fonts) nicht plötzlich unterschiedlich aussehen.
+
+**Fazit:** Vue-Islands in einer React-App sind kein Freifahrtschein für ein wildes Framework-Chaos, sondern ein cleverer, pragmatischer Werkzeug-Griff, wenn du gezielt Features integrieren willst, ohne das Rad neu zu erfinden.`,
     tags: ['React', 'Vue', 'Architektur'],
-    readMinutes: 4,
+    readMinutes: 5,
   },
   {
     id: 'svg-dashboards',
@@ -44,14 +60,30 @@ Der Vorteil: Spezialisierte Teams können in ihrem Stack bleiben, das Portfolio 
     date: '2026-03-02',
     coverImage: '/blog/svg-dashboards.webp',
     teaser:
-      'Warum ich für KPI-Übersichten oft auf handgebautes SVG setze – und wie das LCP und die Wartbarkeit beeinflusst.',
-    content: `Schwere Chart-Libraries sind großartig für Exploration, aber für feste Reporting-Views oft Overkill. Ein SVG mit wenigen Pfaden und Text-Labels lässt sich gezielt animieren, ist skalierbar und lässt ARIA-Rollen sauber setzen.
+      'Willst du nur eine Abkürzung über den Teich nehmen, charterst du sicherlich kein riesiges Frachtschiff – genau so verhält es sich oft mit großen Chart-Libraries in Dashboards.',
+    content: `Willst du nur eine Abkürzung über den Teich nehmen, charterst du sicherlich kein riesiges Frachtschiff. Genau so verhält es sich oft mit großen Chart-Libraries in Dashboards.
 
-Ich normalisiere Daten einmal im Client, rendere nur die sichtbare Viewport-Range und vermeide unnötige Re-Renders durch memoized Paths. Farben kommen aus Tokens, nicht aus Hardcodes – damit Light, Dark und Kontrastmodus konsistent bleiben.
+Schwere Bibliotheken sind fantastisch, wenn Nutzer Daten interaktiv erforschen wollen (zoomen, filtern, klicken). Aber für ein festes Reporting-Dashboard sind sie oft schlichtweg Overkill – sie blähen das Projekt unnötig auf und bremsen die Performance aus.
 
-Das Ergebnis: ein Dashboard, das auch auf schwächeren Geräten flüssig bleibt und trotzdem wie ein Produkt wirkt, nicht wie ein Technik-Demo.`,
+## Warum rohe SVGs oft die bessere Wahl sind
+
+Mit ein paar gezielten SVG-Pfaden und Text-Labels baust du maßgeschneiderte Charts, die sehr performant sind. Der riesige Bonus: Du hast die volle Kontrolle über den Code und kannst Barrierefreiheit (Accessibility) von Anfang an sauber einbauen (z. B. mit echten ARIA-Rollen für Screenreader).
+
+## Wie man es schlank und flüssig hält
+
+Damit das Dashboard auch auf älteren Geräten butterweich läuft, helfen ein paar einfache Regeln:
+
+**Einmal rechnen statt dauernd schwitzen:** Wir normalisieren die Rohdaten einmal im Client, statt bei jeder kleinsten Bewegung im Browser unnötig Rechenleistung zu verbrennen.
+
+**Smart cachen:** Pfade, die sich nicht verändern, werden im Speicher behalten. Der Browser rendert nur das, was wirklich neu ist.
+
+**Farben aus dem Baukasten (Tokens):** Keine harten Farbwerte im Code, sondern Design-Tokens. So springt das Dashboard sauber zwischen Light-Mode, Dark-Mode und Kontrastmodus hin und her, ohne dass etwas kaputtgeht.
+
+## Das Ergebnis
+
+Ein Dashboard, das auch auf schwächeren Geräten flüssig bleibt, barrierefrei funktioniert und sich am Ende anfühlt wie ein echtes, fertiges Produkt – und nicht wie eine überladene Technik-Spielerei.`,
     tags: ['SVG', 'Performance', 'Accessibility'],
-    readMinutes: 6,
+    readMinutes: 5,
   },
   {
     id: 'design-tokens',

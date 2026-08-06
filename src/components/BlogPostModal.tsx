@@ -8,8 +8,35 @@ interface BlogPostModalProps {
   onClose: () => void
 }
 
+function renderInline(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, i) => {
+    const bold = part.match(/^\*\*(.+)\*\*$/)
+    if (bold) {
+      return (
+        <strong key={i} className="font-semibold text-slate-100">
+          {bold[1]}
+        </strong>
+      )
+    }
+    return part
+  })
+}
+
+function renderContentBlock(block: string, index: number) {
+  const heading = block.match(/^##\s+(.+)$/)
+  if (heading) {
+    return (
+      <h3 key={index} className="heading-section text-base font-bold pt-1">
+        {heading[1]}
+      </h3>
+    )
+  }
+  return <p key={index}>{renderInline(block)}</p>
+}
+
 export function BlogPostModal({ post, onClose }: BlogPostModalProps) {
-  const paragraphs = post.content.split(/\n\n+/).filter(Boolean)
+  const blocks = post.content.split(/\n\n+/).filter(Boolean)
   const coverSrc = getBlogCoverImage(post)
 
   return (
@@ -45,42 +72,40 @@ export function BlogPostModal({ post, onClose }: BlogPostModalProps) {
           </div>
 
           <div className="p-6 md:p-8 space-y-5">
-          <header className="border-b border-slate-800 pb-4 space-y-2">
-            <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-cyan-400" />
-                {formatBlogDate(post.date)}
-              </span>
-              {post.readMinutes != null && (
+            <header className="border-b border-slate-800 pb-4 space-y-2">
+              <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-slate-500 uppercase tracking-wider">
                 <span className="inline-flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-violet-400" />
-                  {post.readMinutes} Min. Lesezeit
+                  <Calendar className="w-3 h-3 text-cyan-400" />
+                  {formatBlogDate(post.date)}
                 </span>
-              )}
-            </div>
-            <h2 id="blog-modal-title" className="heading-section text-2xl md:text-3xl font-black tracking-tight">
-              {post.title}
-            </h2>
-            {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800/80 text-[9px] font-mono text-slate-400"
-                  >
-                    <Tag className="w-2.5 h-2.5" />
-                    {tag}
+                {post.readMinutes != null && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-violet-400" />
+                    {post.readMinutes} Min. Lesezeit
                   </span>
-                ))}
+                )}
               </div>
-            )}
-          </header>
+              <h2 id="blog-modal-title" className="heading-section text-2xl md:text-3xl font-black tracking-tight">
+                {post.title}
+              </h2>
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800/80 text-[9px] font-mono text-slate-400"
+                    >
+                      <Tag className="w-2.5 h-2.5" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </header>
 
-          <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
-            {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
+            <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
+              {blocks.map((block, index) => renderContentBlock(block, index))}
+            </div>
           </div>
         </PortfolioCard>
       </div>

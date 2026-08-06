@@ -338,8 +338,9 @@ body {
   color: #64748b !important;
 }
 
+/* #0e7490 statt #0891b2: kleine Mono-Labels (Nav, Badge-Links) ≥ AA */
 [data-appearance='light'] .portfolio-page :is(.text-cyan-400, .text-cyan-300) {
-  color: #0891b2 !important;
+  color: #0e7490 !important;
 }
 
 [data-appearance='light'] .portfolio-page :is(.text-violet-400, .text-violet-300) {
@@ -362,6 +363,19 @@ body {
   background-color: rgba(255, 255, 255, 0.88) !important;
 }
 
+/* Dunkle Accent-/Surface-Chips: sonst helles Remap-Text auf dunklem Rest-BG */
+[data-appearance='light'] .portfolio-page :is(.bg-cyan-950\/50, .bg-cyan-950\/40, .bg-cyan-950) {
+  background-color: color-mix(in srgb, #0891b2 12%, #ffffff) !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.bg-slate-950\/40, .bg-slate-950\/35, .bg-slate-950\/50) {
+  background-color: color-mix(in srgb, #e2e8f0 70%, #ffffff) !important;
+}
+
+[data-appearance='light'] .portfolio-page :is(.border-cyan-800\/30, .border-cyan-800\/50, .border-cyan-800) {
+  border-color: color-mix(in srgb, #0e7490 35%, #ffffff) !important;
+}
+
 [data-appearance='light'] .portfolio-page :is(.border-slate-800, .border-white\/5, .border-slate-700):not(.glass-panel):not(.portfolio-card):not(.portfolio-card-sm):not(.techstack-tool-cell) {
   border-color: #cbd5e1 !important;
 }
@@ -370,7 +384,7 @@ body {
   border-color: #cbd5e1 !important;
 }
 
-[data-appearance='light'] .portfolio-page .bg-slate-800 {
+[data-appearance='light'] .portfolio-page :is(.bg-slate-800\/80, .bg-slate-800\/60) {
   background-color: #f1f5f9 !important;
 }
 
@@ -575,6 +589,10 @@ body {
 [data-appearance='contrast'] .legal-page :is(.bg-slate-950, .bg-slate-950\/90) {
   background-color: #000000 !important;
   background-image: none !important;
+}
+
+[data-appearance='contrast'] .portfolio-page :is(.bg-cyan-950\/50, .bg-cyan-950\/40, .bg-cyan-950, .bg-slate-950\/40, .bg-slate-950\/35, .bg-slate-950\/50) {
+  background-color: #000000 !important;
 }
 
 [data-appearance='contrast'] .portfolio-page :is(.border-slate-800, .border-white\/5, .border-slate-700):not(:is(h1, h2, h3, h4, h5, h6)),
