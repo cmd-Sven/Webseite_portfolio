@@ -87,47 +87,52 @@ export function BlogCarousel({ onSelectPost }: BlogCarouselProps) {
           </div>
         </div>
 
-        {slides.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() => goTo(activeSlide - 1)}
-              className="blog-carousel__nav blog-carousel__nav--prev absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border border-slate-700 bg-slate-950/90 flex items-center justify-center text-slate-300 hover:text-white hover:border-cyan-500/50 transition-colors shadow-lg"
-              aria-label="Vorherige Beiträge"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => goTo(activeSlide + 1)}
-              className="blog-carousel__nav blog-carousel__nav--next absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border border-slate-700 bg-slate-950/90 flex items-center justify-center text-slate-300 hover:text-white hover:border-cyan-500/50 transition-colors shadow-lg"
-              aria-label="Nächste Beiträge"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </>
-        )}
-
-        <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-t border-slate-800/80 bg-[#090a0f]/60">
-          <p className="text-[10px] font-mono text-slate-500">
+        <div className="blog-carousel__controls">
+          <p className="blog-carousel__status">
             Slide {activeSlide + 1} / {slides.length}
-            <span className="hidden sm:inline text-slate-600"> · 2 Beiträge pro Ansicht</span>
+            <span className="blog-carousel__status-hint">
+              {' '}
+              · {perSlide === 1 ? '1 Beitrag' : '2 Beiträge'} pro Ansicht
+            </span>
           </p>
-          <div className="flex items-center gap-1.5" role="tablist" aria-label="Blog-Slider">
-            {slides.map((_, index) => (
+
+          {slides.length > 1 && (
+            <div className="blog-carousel__pager">
               <button
-                key={index}
                 type="button"
-                role="tab"
-                aria-selected={index === activeSlide}
-                aria-label={`Slide ${index + 1}`}
-                onClick={() => goTo(index)}
-                className={`h-1.5 rounded-full transition-all ${
-                  index === activeSlide ? 'w-6 bg-violet-400' : 'w-1.5 bg-slate-600 hover:bg-slate-500'
-                }`}
-              />
-            ))}
-          </div>
+                onClick={() => goTo(activeSlide - 1)}
+                className="blog-carousel__nav"
+                aria-label="Vorherige Beiträge"
+              >
+                <ChevronLeft className="blog-carousel__nav-icon" aria-hidden />
+              </button>
+
+              <div className="blog-carousel__dots" role="tablist" aria-label="Blog-Slider">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === activeSlide}
+                    aria-label={`Slide ${index + 1}`}
+                    onClick={() => goTo(index)}
+                    className={`blog-carousel__dot${
+                      index === activeSlide ? ' blog-carousel__dot--active' : ''
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => goTo(activeSlide + 1)}
+                className="blog-carousel__nav"
+                aria-label="Nächste Beiträge"
+              >
+                <ChevronRight className="blog-carousel__nav-icon" aria-hidden />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </PortfolioCard>

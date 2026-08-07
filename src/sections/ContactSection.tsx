@@ -6,10 +6,13 @@ import { SectionHeader } from '../components/SectionHeader'
 
 export function ContactSection() {
   return (
-    <section id="contact" className="scroll-section section-shell flex items-center justify-center">
-      <SectionRevealLayer className="max-w-4xl w-full">
-        <RevealGroup className="contact-columns flex flex-col md:flex-row gap-12 items-center justify-center h-full">
-          <div className="w-full md:w-1/2 space-y-6">
+    <section
+      id="contact"
+      className="scroll-section section-shell scroll-section--contact flex items-center justify-center"
+    >
+      <SectionRevealLayer className="max-w-4xl w-full min-w-0">
+        <RevealGroup className="contact-columns flex h-auto min-w-0 flex-col items-stretch justify-center gap-8 md:flex-row md:items-center md:gap-12">
+          <div className="contact-columns__copy w-full min-w-0 space-y-5 md:w-1/2 md:space-y-6">
             <SectionHeader eyebrow="Get in touch" title="Lass uns über Synergien sprechen." accent="cyan" />
             <p className="text-sm leading-relaxed text-slate-400">
               Sie suchen einen vielseitigen Teamplayer, der die Lücke zwischen Design, Entwicklung und{' '}
@@ -18,21 +21,21 @@ export function ContactSection() {
             </p>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-slate-300 text-sm">
-                <PortfolioCardSm glow="card-glow--cyan-violet" className="w-10 h-10 !p-0 flex items-center justify-center text-cyan-400">
-                  <Mail className="w-5 h-5" />
+              <div className="flex min-h-11 items-center gap-3 text-sm text-slate-300">
+                <PortfolioCardSm glow="card-glow--cyan-violet" className="flex h-10 w-10 !p-0 items-center justify-center text-cyan-400">
+                  <Mail className="h-5 w-5" />
                 </PortfolioCardSm>
                 <a
                   href="mailto:designer@sven-sieber.de"
-                  className="hover:text-cyan-400 transition-colors"
+                  className="min-w-0 break-all transition-colors hover:text-cyan-400"
                 >
                   designer@sven-sieber.de
                 </a>
               </div>
-              <div className="flex items-center gap-3 text-slate-300 text-sm">
-                <PortfolioCardSm glow="card-glow--cyan-violet" className="w-10 h-10 !p-0 flex items-center justify-center text-cyan-400">
+              <div className="flex min-h-11 items-center gap-3 text-sm text-slate-300">
+                <PortfolioCardSm glow="card-glow--cyan-violet" className="flex h-10 w-10 !p-0 items-center justify-center text-cyan-400">
                   <svg
-                    className="w-5 h-5"
+                    className="h-5 w-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -44,59 +47,59 @@ export function ContactSection() {
                     <path d="M9 18c-4.51 2-5-2-7-2" />
                   </svg>
                 </PortfolioCardSm>
-                <span>github.com/svensieber</span>
+                <span className="min-w-0 break-all">github.com/svensieber</span>
               </div>
             </div>
           </div>
 
-          <div className="w-full md:w-1/2">
-            <PortfolioCard glow="card-glow--cyan-violet" hover="cyan" className="space-y-4">
+          <div className="contact-columns__form w-full min-w-0 md:w-1/2">
+            <PortfolioCard glow="card-glow--cyan-violet" hover="cyan" className="contact-form-card space-y-4">
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
                   alert('Vielen Dank für Ihre Nachricht! Ich werde mich zeitnah bei Ihnen melden.')
                 }}
-                className="space-y-4"
+                className="contact-form space-y-4"
               >
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-slate-300 text-xs">Unternehmen / Name</span>
+                  <label className="label py-1">
+                    <span className="label-text text-xs text-slate-300">Unternehmen / Name</span>
                   </label>
                   <input
                     type="text"
                     placeholder="Muster GmbH / Ansprechpartner"
                     required
-                    className="input input-bordered bg-[#0a0b10] border-slate-800 text-sm focus:border-cyan-500 w-full rounded-xl"
+                    className="contact-form__field input input-bordered w-full rounded-xl border-slate-800 bg-[#0a0b10] text-sm text-slate-100 focus:border-cyan-500"
                   />
                 </div>
 
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-slate-300 text-xs">E-Mail-Adresse</span>
+                  <label className="label py-1">
+                    <span className="label-text text-xs text-slate-300">E-Mail-Adresse</span>
                   </label>
                   <input
                     type="email"
                     placeholder="ihre.firma@unternehmen.de"
                     required
-                    className="input input-bordered bg-[#0a0b10] border-slate-800 text-sm focus:border-cyan-500 w-full rounded-xl"
+                    className="contact-form__field input input-bordered w-full rounded-xl border-slate-800 bg-[#0a0b10] text-sm text-slate-100 focus:border-cyan-500"
                   />
                 </div>
 
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-slate-300 text-xs">Nachricht</span>
+                  <label className="label py-1">
+                    <span className="label-text text-xs text-slate-300">Nachricht</span>
                   </label>
                   <textarea
                     rows={4}
                     placeholder="Sprechen wir über Ihre offene Vakanz oder ein konkretes Projekt..."
                     required
-                    className="textarea textarea-bordered bg-[#0a0b10] border-slate-800 text-sm focus:border-cyan-500 w-full rounded-xl"
+                    className="contact-form__field textarea textarea-bordered w-full rounded-xl border-slate-800 bg-[#0a0b10] text-sm text-slate-100 focus:border-cyan-500"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="btn btn-primary bg-gradient-to-r from-cyan-500 to-violet-600 border-none text-slate-950 font-bold hover:brightness-110 shadow-lg shadow-cyan-500/20 w-full rounded-xl"
+                  className="contact-form__submit btn btn-primary w-full rounded-xl border-none bg-gradient-to-r from-cyan-500 to-violet-600 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 hover:brightness-110"
                 >
                   Kontakt herstellen
                 </button>

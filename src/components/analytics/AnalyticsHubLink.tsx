@@ -30,19 +30,19 @@ const DEMOS = [
 
 export function AnalyticsHubLink() {
   return (
-    <PortfolioCard glow="card-glow--emerald-cyan" hover="emerald" className="w-full text-slate-100">
-      <div className="space-y-3">
+    <PortfolioCard glow="card-glow--emerald-cyan" hover="emerald" className="w-full min-w-0 text-slate-100">
+      <div className="space-y-3 min-w-0">
         <p className="text-xs leading-relaxed text-slate-400">
           Drei Demos öffnen in einem neuen Tab – jeweils mit eigener Navigation zwischen den
           Experimenten.
         </p>
-        <div className="grid gap-2.5 grid-cols-1">
+        <div className="demo-hub-grid grid grid-cols-1 gap-3">
           {DEMOS.map((demo) => {
             const Icon = demo.icon
             const blurb = 'blurb' in demo ? demo.blurb : null
             const more = 'more' in demo ? demo.more : null
             return (
-              <div key={demo.href} className="demo-hub-card relative w-full rounded-xl text-cyan-400">
+              <div key={demo.href} className="demo-hub-card relative w-full min-w-0 rounded-xl text-cyan-400">
                 <a
                   href={demo.href}
                   target="_blank"
@@ -54,17 +54,19 @@ export function AnalyticsHubLink() {
                 <div className="demo-hub-card__surface pointer-events-none relative z-[1]">
                   <PortfolioCardSm
                     glow={demo.glow}
-                    className="flex w-full items-start justify-between gap-3 p-4"
+                    className="demo-hub-card__inner flex w-full min-w-0 items-start justify-between gap-3 p-3.5 sm:p-4"
                   >
-                    <div className="flex items-start gap-3 min-w-0">
-                      <Icon className="w-5 h-5 shrink-0 mt-0.5" aria-hidden />
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
                       <div className="min-w-0">
-                        <span className="text-sm font-semibold text-slate-100 block">
+                        <span className="block text-sm font-semibold leading-snug text-slate-100">
                           {demo.title}
                         </span>
-                        <span className="text-[10px] text-slate-500 block mt-0.5">{demo.detail}</span>
+                        <span className="mt-0.5 block text-[11px] leading-snug text-slate-500 sm:text-xs">
+                          {demo.detail}
+                        </span>
                         {blurb && more ? (
-                          <span className="text-[11px] text-slate-400 leading-snug block mt-1.5">
+                          <span className="mt-1.5 block text-[11px] leading-snug text-slate-400 sm:text-xs">
                             {blurb}{' '}
                             <span className="pointer-events-auto relative z-10 inline">
                               <GlossaryTermHint term={demo.title} description={more}>
@@ -76,7 +78,7 @@ export function AnalyticsHubLink() {
                       </div>
                     </div>
                     <ExternalLink
-                      className="w-5 h-5 text-slate-500 transition-colors shrink-0 mt-0.5"
+                      className="mt-0.5 h-5 w-5 shrink-0 text-slate-500 transition-colors"
                       aria-hidden
                     />
                   </PortfolioCardSm>

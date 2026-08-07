@@ -33,8 +33,8 @@ const DEMO_PREVIEW: { label: ReactNode; detail: ReactNode }[] = [
 
 export function DashboardDemos() {
   return (
-    <div className="space-y-5 max-w-xl">
-      <div className="space-y-3">
+    <div className="dashboard-demos space-y-5 w-full max-w-xl min-w-0">
+      <div className="space-y-3 min-w-0">
         <p className="text-sm leading-relaxed text-slate-400">
           Demo 1: Conversion-Welt mit Vue-Steuerung und drei Analysen als{' '}
           <BlogTermHint termKey="SVG" />. Demo 2: zwei Varianten für den{' '}
@@ -43,7 +43,7 @@ export function DashboardDemos() {
         </p>
         <ul className="space-y-2.5 border-l border-cyan-500/25 pl-4">
           {DEMO_PREVIEW.map((item, index) => (
-            <li key={index} className="text-xs leading-relaxed text-slate-400">
+            <li key={index} className="text-xs sm:text-[13px] leading-relaxed text-slate-400">
               <span className="font-semibold text-slate-200">{item.label}</span>
               <span className="text-slate-500"> — </span>
               {item.detail}

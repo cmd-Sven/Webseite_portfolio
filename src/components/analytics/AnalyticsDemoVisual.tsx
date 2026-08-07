@@ -68,17 +68,17 @@ export function AnalyticsDemoVisual() {
   return (
     <div
       ref={frameRef}
-      className="analytics-demo-visual relative select-none"
+      className="analytics-demo-visual relative w-full max-w-full min-w-0 select-none overflow-x-clip"
       onPointerMove={canHoverTilt ? onPointerMove : undefined}
       onPointerLeave={canHoverTilt ? onPointerLeave : undefined}
       aria-hidden="true"
     >
       <div
-        className="analytics-demo-visual__stage relative mx-auto w-full max-w-[380px]"
+        className="analytics-demo-visual__stage relative mx-auto w-full max-w-[min(100%,380px)]"
         style={{ perspective: '900px' }}
       >
         <div
-          className="analytics-demo-visual__card relative"
+          className="analytics-demo-visual__card relative w-full max-w-full"
           style={{
             transform: reducedMotion
               ? 'none'
@@ -91,9 +91,9 @@ export function AnalyticsDemoVisual() {
             willChange: reducedMotion ? undefined : 'transform',
           }}
         >
-          <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-cyan-500/20 via-violet-500/10 to-transparent blur-2xl pointer-events-none" />
+          <div className="analytics-demo-visual__glow pointer-events-none absolute -inset-4 sm:-inset-6 rounded-[2rem] bg-gradient-to-br from-cyan-500/20 via-violet-500/10 to-transparent blur-2xl" />
 
-          <div className="relative rounded-2xl border border-slate-700/80 bg-slate-900/95 shadow-[0_24px_60px_-20px_rgba(6,182,212,0.35),0_12px_32px_-16px_rgba(139,92,246,0.25)] overflow-hidden">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/95 shadow-[0_24px_60px_-20px_rgba(6,182,212,0.35),0_12px_32px_-16px_rgba(139,92,246,0.25)]">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
               <span className="w-2 h-2 rounded-full bg-rose-400/80" />
               <span className="w-2 h-2 rounded-full bg-amber-400/80" />

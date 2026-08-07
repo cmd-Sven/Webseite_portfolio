@@ -4,6 +4,7 @@ import { ArrowDown, Lock } from 'lucide-react'
 import { NAV_SECTIONS } from '../data/navigation'
 import { AnimatedGradientBackground } from '../components/AnimatedGradientBackground'
 import { SectionNav } from '../components/SectionNav'
+import { ScrollToTopButton } from '../components/ScrollToTopButton'
 import { ViewportSwitcher } from '../components/ViewportSwitcher'
 import { ViewportProvider } from '../context/ViewportContext'
 import { useAuth } from '../context/AuthContext'
@@ -504,6 +505,7 @@ function PortfolioPageContent() {
               introReady={headerPhase === 'sliding' || headerPhase === 'nav'}
               skipReveal={skipNavReveal}
             />
+            <ScrollToTopButton scrollContainerRef={containerRef} />
 
             <div
               ref={containerRef}

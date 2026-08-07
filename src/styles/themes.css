@@ -411,8 +411,49 @@ body {
   --tw-gradient-from: #ffffff;
 }
 
-[data-appearance='light'] .portfolio-page .blog-carousel__inner > div:last-child {
-  background-color: rgba(248, 250, 252, 0.9) !important;
+[data-appearance='light'] .portfolio-page .blog-carousel__controls {
+  background-color: rgba(248, 250, 252, 0.95);
+  border-top-color: var(--surface-border);
+}
+
+[data-appearance='light'] .portfolio-page .blog-carousel__nav {
+  background-color: #ffffff;
+  border-color: var(--card-border);
+  color: #0f172a;
+}
+
+[data-appearance='light'] .portfolio-page .blog-carousel__nav:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-appearance='light'] .portfolio-page .blog-carousel__dot--active {
+  background: #7c3aed;
+}
+
+[data-appearance='contrast'] .portfolio-page .blog-carousel__controls {
+  background-color: #000000;
+  border-top: 2px solid #ffffff;
+}
+
+[data-appearance='contrast'] .portfolio-page .blog-carousel__nav {
+  background-color: #000000;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+
+[data-appearance='contrast'] .portfolio-page .blog-carousel__nav:hover {
+  border-color: #ffff00;
+  color: #ffff00;
+  text-decoration: none;
+}
+
+[data-appearance='contrast'] .portfolio-page .blog-carousel__dot {
+  background: #ffffff;
+}
+
+[data-appearance='contrast'] .portfolio-page .blog-carousel__dot--active {
+  background: #ffff00;
 }
 
 [data-appearance='light'] .portfolio-page .glass-panel,
@@ -551,6 +592,32 @@ body {
   border-width: 1.5px !important;
 }
 
+[data-appearance='light'] .portfolio-page .contact-form__field,
+[data-appearance='light'] .portfolio-page .bg-\[\#0a0b10\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-appearance='light'] .portfolio-page .contact-form__field::placeholder {
+  color: #64748b !important;
+}
+
+[data-appearance='light'] .portfolio-page .contact-form__field:focus {
+  border-color: #0e7490 !important;
+  outline: none;
+}
+
+[data-appearance='light'] .portfolio-page .analytics-demo-visual .bg-slate-900\/95,
+[data-appearance='light'] .portfolio-page .analytics-demo-visual .bg-slate-950\/80 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+[data-appearance='light'] .portfolio-page .analytics-demo-visual .border-slate-700\/80,
+[data-appearance='light'] .portfolio-page .analytics-demo-visual .border-slate-800 {
+  border-color: #cbd5e1 !important;
+}
+
 [data-appearance='contrast'] .portfolio-page .backdrop-blur-xl,
 [data-appearance='contrast'] .portfolio-page .backdrop-blur-md,
 [data-appearance='contrast'] .portfolio-page .backdrop-blur-sm {
@@ -565,6 +632,28 @@ body {
   background-color: #000000 !important;
   border: 2px solid #ffffff !important;
   color: #ffffff !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .contact-form__field,
+[data-appearance='contrast'] .portfolio-page .bg-\[\#0a0b10\] {
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+[data-appearance='contrast'] .portfolio-page .contact-form__field::placeholder {
+  color: #ffff00 !important;
+  opacity: 0.85;
+}
+
+[data-appearance='contrast'] .portfolio-page .contact-form__field:focus {
+  border-color: #ffff00 !important;
+  outline: 2px solid #ffff00;
+  outline-offset: 2px;
+}
+
+[data-appearance='contrast'] .portfolio-page .contact-form__submit {
+  border: 2px solid #ffff00 !important;
 }
 
 /* —— Überschriften (Light: dunkel & lesbar) —— */
