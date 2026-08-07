@@ -40,7 +40,6 @@ import {
   consumePoolBookmarkletHash,
   guessCompanyFromUrl,
   loadPoolBookmarkletPayload,
-  payloadFromClipboardText,
   readPoolBookmarkletFromClipboard,
   savePoolBookmarkletPayload,
   type AtsPoolBookmarkletPayload,
