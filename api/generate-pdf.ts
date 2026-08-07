@@ -121,10 +121,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: 'Ungültige Session' })
     }
 
+    // Fail-closed: nur Admin (JWT app_metadata.role oder konfigurierte Admin-E-Mail).
+    const jwtRole = String(user.app_metadata?.role ?? '')
+      .trim()
+      .toLowerCase()
     const adminEmail = (process.env.ADMIN_EMAIL || process.env.VITE_ADMIN_EMAIL || '')
       .trim()
       .toLowerCase()
-    if (adminEmail && (user.email || '').toLowerCase() !== adminEmail) {
+    const userEmail = (user.email || '').toLowerCase()
+    const isAdmin =
+      jwtRole === 'admin' || (Boolean(adminEmail) && userEmail === adminEmail)
+    if (!isAdmin) {
       return res.status(403).json({ error: 'Kein Admin-Zugriff' })
     }
 
