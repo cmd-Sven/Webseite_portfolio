@@ -339,7 +339,7 @@ export function AdminPlanPage() {
     setError(null)
     setNotice(null)
 
-    const { data: app, error: ensureError } = await ensureApplicationForPool(pool, user.id)
+    const { data: app, error: ensureError } = await ensureApplicationForPool(pool)
     setBusyAction(false)
 
     if (ensureError || !app) {

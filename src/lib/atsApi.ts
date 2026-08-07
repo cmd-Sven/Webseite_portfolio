@@ -482,7 +482,6 @@ export async function markManuallySent(
  */
 export async function ensureApplicationForPool(
   pool: JobPoolRow,
-  userId: string,
 ): Promise<{ data: ApplicationRow | null; error: string | null }> {
   if (pool.application_id) {
     return getApplicationById(pool.application_id)
