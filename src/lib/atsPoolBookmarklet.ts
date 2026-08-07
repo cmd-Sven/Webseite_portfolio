@@ -241,15 +241,23 @@ export async function readPoolBookmarkletFromClipboard(
   }
 }
 
+export type PoolBookmarkletTargetPath = '/admin/pool' | '/monitor'
+
 /**
  * javascript:-Bookmarklet. Embeddet die aktuelle Portfolio-Origin,
  * damit lokal und auf Vercel dieselbe Lesezeichen-Zeile funktioniert.
  *
  * Primär: postMessage. Fallback: Clipboard + gekürzter URL-Hash
  * (Chrome speichert oft die Seite statt javascript:-Links).
+ *
+ * `targetPath`: Admin → `/admin/pool`, Monitor (Caro) → `/monitor`.
  */
-export function buildPoolBookmarkletHref(origin: string): string {
+export function buildPoolBookmarkletHref(
+  origin: string,
+  targetPath: PoolBookmarkletTargetPath = '/admin/pool',
+): string {
   const o = JSON.stringify(origin.replace(/\/$/, ''))
+  const path = JSON.stringify(targetPath)
   const max = String(MAX_TEXT_CHARS)
   const hashMax = String(HASH_MAX_TEXT_CHARS)
   const msgType = JSON.stringify(ATS_POOL_JOB_MESSAGE_TYPE)
@@ -260,6 +268,7 @@ export function buildPoolBookmarkletHref(origin: string): string {
   const body = [
     '(function(){',
     `var O=${o};`,
+    `var P=${path};`,
     `var MT=${msgType};`,
     `var AT=${ackType};`,
     `var CP=${clipPrefix};`,
@@ -278,7 +287,7 @@ export function buildPoolBookmarkletHref(origin: string): string {
     `var compact={type:MT,title:String(payload.title||"").slice(0,300),url:String(payload.url||"").slice(0,2000),company:"",text:text.slice(0,${hashMax})};`,
     'hash=HP+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(compact)))));',
     '}catch(e){}',
-    'var target=O+"/admin/pool?from=bookmarklet&import=clipboard"+hash;',
+    'var target=O+P+"?from=bookmarklet&import=clipboard"+hash;',
     'var w=window.open(target,"_blank");',
     'if(!w){alert("Popup blockiert. Bitte Popups fuer diese Seite erlauben und erneut klicken.");return;}',
     'var tries=0,maxTries=80,acked=false,timer;',

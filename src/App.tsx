@@ -2,7 +2,9 @@ import { Routes, Route } from 'react-router-dom'
 import { PortfolioPage } from './pages/PortfolioPage'
 import { ImpressumPage } from './pages/ImpressumPage'
 import { DatenschutzPage } from './pages/DatenschutzPage'
-import { AnalyticsPage, AnalyticsMetricRedirect } from './pages/AnalyticsPage'
+import { AnalyticsPage, AnalyticsMetricRedirect, AnalyticsLegacyRedirect } from './pages/AnalyticsPage'
+import { ABTestPage } from './pages/ABTestPage'
+import { PerformancePage } from './pages/PerformancePage'
 import { AtsBookmarkletReceiver } from './components/admin/AtsBookmarkletReceiver'
 import { AtsPoolBookmarkletReceiver } from './components/admin/AtsPoolBookmarkletReceiver'
 import { ProtectedRoute } from './components/admin/ProtectedRoute'
@@ -24,7 +26,13 @@ export function App() {
       <AtsPoolBookmarkletReceiver />
       <Routes>
         <Route path="/" element={<PortfolioPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/demo/analytics" element={<AnalyticsPage />} />
+        <Route path="/demo/ab-test" element={<ABTestPage />} />
+        <Route path="/demo/performance" element={<PerformancePage />} />
+        <Route
+          path="/analytics"
+          element={<AnalyticsLegacyRedirect />}
+        />
         <Route path="/analytics/:metricId" element={<AnalyticsMetricRedirect />} />
         <Route path="/impressum" element={<ImpressumPage />} />
         <Route path="/datenschutz" element={<DatenschutzPage />} />

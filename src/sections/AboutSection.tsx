@@ -1,11 +1,41 @@
+import type { ReactNode } from 'react'
 import { MapPin, User } from 'lucide-react'
 import { ABOUT_PROFILE } from '../data/about'
+import { BlogTermHint } from '../components/BlogTermHint'
+import { BrandLogo } from '../components/BrandLogo'
 import { PortfolioCard } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
 
 /** Animiertes WebP (1:1, nicht neu gerendert — Optimizer würde Frames killen). */
 const ABOUT_ILLUSTRATION_SRC = '/about/animation-sieber-computer.webp'
+
+const ABOUT_PARAGRAPHS: ReactNode[] = [
+  <>
+    Ich verbinde Mediengestaltung, <BlogTermHint termKey="UX/UI" /> und{' '}
+    <BlogTermHint termKey="Full-Stack-Entwicklung" /> mit einem wachsenden Fokus auf{' '}
+    <BlogTermHint termKey="Datenanalyse" />. Mein Ziel: digitale Produkte, die nicht nur gut
+    aussehen, sondern messbar performen.
+  </>,
+  <>
+    In Projekten arbeite ich strukturiert von der <BlogTermHint termKey="Hypothese" /> über Prototyp
+    bis zur Auswertung – ob <BlogTermHint termKey="Conversion-Optimierung" />,{' '}
+    <BlogTermHint termKey="Dashboard" /> oder interoperable Frontends mit React und Vue.
+  </>,
+  <>
+    Aktuell schließe ich meine Spezialisierung zum Datenanalysten ab und suche ein Umfeld, in dem
+    Design, Technik und <BlogTermHint termKey="Business Intelligence" /> zusammenwirken.
+  </>,
+]
+
+const ABOUT_HIGHLIGHTS: ReactNode[] = [
+  <>T-Shaped: breite UX/UI & Dev, tiefe Datenkompetenz</>,
+  <>React, Vue, TypeScript, Tailwind, SVG-Visualisierung</>,
+  <>
+    <BlogTermHint termKey="CRO" />, Funnel-Analyse, A/B-Tests und Denken in{' '}
+    <BlogTermHint termKey="KPI">KPIs</BlogTermHint>
+  </>,
+]
 
 function LinkedInIcon({ className }: { className?: string }) {
   return (
@@ -24,7 +54,7 @@ function XingIcon({ className }: { className?: string }) {
 }
 
 export function AboutSection() {
-  const { linkedInUrl, xingUrl, location, role, paragraphs, highlights } = ABOUT_PROFILE
+  const { linkedInUrl, xingUrl, location, role } = ABOUT_PROFILE
 
   return (
     <section
@@ -58,9 +88,7 @@ export function AboutSection() {
               className="about-profile-card relative z-10 flex flex-col gap-6 p-6 sm:p-8 md:p-9"
             >
               <header className="flex flex-wrap items-center gap-4 border-b border-slate-800/80 pb-5">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-400 to-violet-500 text-2xl font-black text-slate-950">
-                  S
-                </div>
+                <BrandLogo variant="mark" size="xl" className="shrink-0" />
                 <div className="min-w-0 space-y-1.5">
                   <p className="heading-section text-lg font-bold sm:text-xl">Sven Sieber</p>
                   <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
@@ -77,15 +105,15 @@ export function AboutSection() {
               </header>
 
               <div className="space-y-3.5 text-sm leading-relaxed text-slate-300 md:text-[15px]">
-                {paragraphs.map((text, index) => (
+                {ABOUT_PARAGRAPHS.map((text, index) => (
                   <p key={index}>{text}</p>
                 ))}
               </div>
 
               <ul className="grid gap-2 sm:grid-cols-1">
-                {highlights.map((item) => (
+                {ABOUT_HIGHLIGHTS.map((item, index) => (
                   <li
-                    key={item}
+                    key={index}
                     className="flex items-start gap-2 rounded-xl border border-slate-800/60 bg-slate-950/40 px-3 py-2.5 text-xs text-slate-400"
                   >
                     <span className="mt-0.5 text-cyan-400">▸</span>
@@ -97,7 +125,7 @@ export function AboutSection() {
               <div className="mt-auto space-y-3 border-t border-slate-800/80 pt-5">
                 <p className="text-xs leading-relaxed text-slate-400">
                   Vernetze dich gerne auf LinkedIn oder Xing – dort teile ich Updates zu Projekten,
-                  Datenanalyse und Frontend-Themen.
+                  Datenanalyse und Themen rund ums <BlogTermHint termKey="Frontend" />.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <a

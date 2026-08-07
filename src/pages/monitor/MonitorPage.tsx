@@ -1,27 +1,66 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Building2, ExternalLink, LogOut, Plus, Send } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
-import { listApplications } from '../../lib/atsApi'
-import { listJobPoolEntries } from '../../lib/atsPoolApi'
 import {
-  createCompanySuggestion,
-  createJobSuggestion,
-} from '../../lib/atsSuggestionsApi'
-import type { ApplicationRow, JobPoolRow } from '../../types/ats'
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+} from 'react'
+import { useSearchParams } from 'react-router-dom'
+import {
+  Bookmark,
+  Building2,
+  ClipboardPaste,
+  Copy,
+  ExternalLink,
+  LayoutGrid,
+  List,
+  LogOut,
+  Pencil,
+  Plus,
+  Send,
+  UserRound,
+} from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { ThemeSwitcher } from '../../components/ThemeSwitcher'
+import { MonitorFlipCard } from '../../components/monitor/MonitorFlipCard'
+import { MonitorPoolEditor } from '../../components/monitor/MonitorPoolEditor'
+import { MonitorProfilePanel } from '../../components/monitor/MonitorProfilePanel'
+import { listApplications } from '../../lib/atsApi'
+import { guessCompanyFromTitle } from '../../lib/atsBookmarklet'
+import {
+  displayNameFromUser,
+  resolveAdminPoolOwnerId,
+} from '../../lib/atsMonitorApi'
+import {
+  ATS_POOL_BOOKMARKLET_EVENT,
+  buildPoolBookmarkletHref,
+  claimPoolBookmarkletPayload,
+  consumePoolBookmarkletHash,
+  guessCompanyFromUrl,
+  loadPoolBookmarkletPayload,
+  payloadFromClipboardText,
+  readPoolBookmarkletFromClipboard,
+  savePoolBookmarkletPayload,
+  type AtsPoolBookmarkletPayload,
+} from '../../lib/atsPoolBookmarklet'
+import {
+  createJobPoolEntry,
+  listJobPoolEntries,
+} from '../../lib/atsPoolApi'
+import { createCompanySuggestion } from '../../lib/atsSuggestionsApi'
+import type { ApplicationRow, JobPoolRow, JobPoolStatus } from '../../types/ats'
 
 type MonitorTab = 'offen' | 'verschickt' | 'rueckmeldungen'
-type SuggestMode = null | 'job' | 'company'
+type PanelMode = null | 'add-job' | 'company' | 'profile'
+type ViewMode = 'list' | 'cards'
 
-const STATUS_BADGE: Record<string, string> = {
-  Gefunden: 'bg-zinc-100 text-zinc-700',
-  'In Bearbeitung': 'bg-sky-50 text-sky-800',
-  Beworben: 'bg-amber-50 text-amber-800',
-  Interview: 'bg-emerald-50 text-emerald-800',
-  Absage: 'bg-red-50 text-red-800',
-  gesammelt: 'bg-zinc-100 text-zinc-700',
-  geplant: 'bg-sky-50 text-sky-800',
-  in_arbeit: 'bg-amber-50 text-amber-800',
-  erledigt: 'bg-emerald-50 text-emerald-800',
+const POOL_STATUS_LABEL: Record<JobPoolStatus, string> = {
+  gesammelt: 'Gesammelt',
+  geplant: 'Geplant',
+  in_arbeit: 'In Arbeit',
+  erledigt: 'Erledigt',
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -37,42 +76,87 @@ function formatDate(iso: string | null | undefined): string {
   }
 }
 
+function truncate(text: string | null | undefined, max = 160): string {
+  const t = (text ?? '').trim()
+  if (!t) return ''
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t
+}
+
+function resolvePoolImportFields(payload: AtsPoolBookmarkletPayload): {
+  title: string
+  company_name: string
+  job_description: string | null
+  source_url: string | null
+} {
+  const title =
+    payload.title.trim() ||
+    (payload.url ? 'Stelle (ohne Titel)' : 'Stelle (Import)')
+  const company_name =
+    payload.company?.trim() ||
+    guessCompanyFromTitle(payload.title) ||
+    guessCompanyFromUrl(payload.url) ||
+    'Unbekannt'
+  return {
+    title,
+    company_name,
+    job_description: payload.text.trim() || null,
+    source_url: payload.url.trim() || null,
+  }
+}
+
 function Badge({ label }: { label: string }) {
-  return (
-    <span
-      className={[
-        'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium',
-        STATUS_BADGE[label] ?? 'bg-zinc-100 text-zinc-700',
-      ].join(' ')}
-    >
-      {label}
-    </span>
-  )
+  return <span className="monitor-shell__badge">{label}</span>
 }
 
 export function MonitorPage() {
   const { user, signOut } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [tab, setTab] = useState<MonitorTab>('offen')
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [applications, setApplications] = useState<ApplicationRow[]>([])
   const [pool, setPool] = useState<JobPoolRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [suggestMode, setSuggestMode] = useState<SuggestMode>(null)
+  const [panel, setPanel] = useState<PanelMode>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
-  // Job form
   const [jobTitle, setJobTitle] = useState('')
   const [jobCompany, setJobCompany] = useState('')
   const [jobUrl, setJobUrl] = useState('')
   const [jobNotes, setJobNotes] = useState('')
   const [jobRaw, setJobRaw] = useState('')
 
-  // Company form
   const [companyName, setCompanyName] = useState('')
   const [companyUrl, setCompanyUrl] = useState('')
   const [companyNotes, setCompanyNotes] = useState('')
 
   const [submitting, setSubmitting] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [bookmarkletHref, setBookmarkletHref] = useState('')
+  const [bookmarkletCopied, setBookmarkletCopied] = useState(false)
+  const [clipboardHint, setClipboardHint] = useState(false)
+  const [importMissBanner, setImportMissBanner] = useState(false)
+  const bookmarkletLinkRef = useRef<HTMLAnchorElement>(null)
+  const importLockRef = useRef(false)
+  const importReceivedRef = useRef(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    const [appsRes, poolRes] = await Promise.all([
+      listApplications(),
+      listJobPoolEntries(),
+    ])
+    if (appsRes.error || poolRes.error) {
+      setError(appsRes.error || poolRes.error)
+      setLoading(false)
+      return
+    }
+    setApplications(appsRes.data)
+    setPool(poolRes.data)
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
     document.body.style.overflowY = 'auto'
@@ -82,33 +166,22 @@ export function MonitorPage() {
   }, [])
 
   useEffect(() => {
-    let active = true
-    async function load() {
-      setLoading(true)
-      setError(null)
-      const [appsRes, poolRes] = await Promise.all([
-        listApplications(),
-        listJobPoolEntries(),
-      ])
-      if (!active) return
-      if (appsRes.error || poolRes.error) {
-        setError(appsRes.error || poolRes.error)
-        setLoading(false)
-        return
-      }
-      setApplications(appsRes.data)
-      setPool(poolRes.data)
-      setLoading(false)
-    }
     void load()
-    return () => {
-      active = false
-    }
+  }, [load])
+
+  useEffect(() => {
+    const origin = window.location.origin
+    setBookmarkletHref(buildPoolBookmarkletHref(origin, '/monitor'))
   }, [])
 
+  useEffect(() => {
+    const el = bookmarkletLinkRef.current
+    if (!el || !bookmarkletHref) return
+    el.setAttribute('href', bookmarkletHref)
+  }, [bookmarkletHref])
+
   const openPool = useMemo(
-    () =>
-      pool.filter((p) => p.status === 'gesammelt' || p.status === 'geplant'),
+    () => pool.filter((p) => p.status === 'gesammelt' || p.status === 'geplant'),
     [pool],
   )
 
@@ -136,33 +209,230 @@ export function MonitorPage() {
     [applications],
   )
 
+  const editingEntry = useMemo(
+    () => (editingId ? pool.find((p) => p.id === editingId) ?? null : null),
+    [editingId, pool],
+  )
+
+  const importPoolPayload = useCallback(
+    async (payload: AtsPoolBookmarkletPayload) => {
+      if (!payload.text && !payload.title && !payload.url) return
+      if (importLockRef.current) return
+      if (!claimPoolBookmarkletPayload(payload)) return
+
+      importLockRef.current = true
+      importReceivedRef.current = true
+      setImportMissBanner(false)
+      setClipboardHint(false)
+      setImporting(true)
+      setError(null)
+      setNotice(null)
+
+      const { userId, error: ownerError } = await resolveAdminPoolOwnerId()
+      if (!userId) {
+        setImporting(false)
+        importLockRef.current = false
+        setError(ownerError || 'Admin-Pool-Besitzer nicht gefunden.')
+        return
+      }
+
+      const fields = resolvePoolImportFields(payload)
+      const { data, error: createError } = await createJobPoolEntry({
+        user_id: userId,
+        application_type: 'regular',
+        title: fields.title,
+        company_name: fields.company_name,
+        status: 'gesammelt',
+        source_url: fields.source_url,
+        job_description: fields.job_description,
+      })
+
+      setImporting(false)
+
+      if (createError || !data) {
+        importLockRef.current = false
+        setError(
+          createError
+            ? `Import fehlgeschlagen: ${createError}`
+            : 'Import fehlgeschlagen.',
+        )
+        return
+      }
+
+      setNotice('Stelle in Svens Pool übernommen — du kannst Details noch anpassen.')
+      await load()
+      setEditingId(data.id)
+      setPanel(null)
+      setTab('offen')
+      window.setTimeout(() => {
+        importLockRef.current = false
+      }, 800)
+    },
+    [load],
+  )
+
+  const tryClipboardImport = useCallback(
+    async (allowPlain = false): Promise<boolean> => {
+      const fromClip = await readPoolBookmarkletFromClipboard({ allowPlain })
+      if (!fromClip) return false
+      savePoolBookmarkletPayload(fromClip)
+      await importPoolPayload(fromClip)
+      return true
+    },
+    [importPoolPayload],
+  )
+
+  useEffect(() => {
+    if (!user) return
+
+    const fromBookmarklet = searchParams.get('from') === 'bookmarklet'
+    const wantClipboard = searchParams.get('import') === 'clipboard'
+    let cancelled = false
+    let missTimer: number | undefined
+
+    function clearImportQuery() {
+      const next = new URLSearchParams(searchParams)
+      let changed = false
+      if (next.has('from')) {
+        next.delete('from')
+        changed = true
+      }
+      if (next.has('import')) {
+        next.delete('import')
+        changed = true
+      }
+      if (changed) setSearchParams(next, { replace: true })
+    }
+
+    async function ingestAvailable() {
+      const stored = loadPoolBookmarkletPayload()
+      if (stored) {
+        await importPoolPayload(stored)
+        return true
+      }
+
+      const fromHash = consumePoolBookmarkletHash()
+      if (fromHash) {
+        savePoolBookmarkletPayload(fromHash)
+        await importPoolPayload(fromHash)
+        return true
+      }
+
+      if (wantClipboard) {
+        const ok = await tryClipboardImport(false)
+        if (ok) return true
+        if (!cancelled) setClipboardHint(true)
+      }
+
+      return false
+    }
+
+    void ingestAvailable().then((got) => {
+      if (cancelled) return
+      if (got || fromBookmarklet || wantClipboard) clearImportQuery()
+
+      if ((fromBookmarklet || wantClipboard) && !importReceivedRef.current) {
+        missTimer = window.setTimeout(() => {
+          if (cancelled || importReceivedRef.current) return
+          const late = loadPoolBookmarkletPayload()
+          if (late) {
+            void importPoolPayload(late)
+            return
+          }
+          setImportMissBanner(true)
+          if (wantClipboard) setClipboardHint(true)
+        }, 4500)
+      }
+    })
+
+    function onPoolBookmarkletEvent(event: Event) {
+      const detail = (event as CustomEvent<AtsPoolBookmarkletPayload>).detail
+      if (!detail) return
+      void importPoolPayload(detail)
+    }
+
+    window.addEventListener(ATS_POOL_BOOKMARKLET_EVENT, onPoolBookmarkletEvent)
+
+    return () => {
+      cancelled = true
+      if (missTimer) window.clearTimeout(missTimer)
+      window.removeEventListener(ATS_POOL_BOOKMARKLET_EVENT, onPoolBookmarkletEvent)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, importPoolPayload, tryClipboardImport])
+
+  async function copyBookmarkletCode() {
+    if (!bookmarkletHref) {
+      setError('Bookmarklet-Code noch nicht bereit — Seite kurz neu laden.')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(bookmarkletHref)
+      setBookmarkletCopied(true)
+      window.setTimeout(() => setBookmarkletCopied(false), 2500)
+    } catch {
+      setError(
+        'Clipboard blockiert. Unten den Code manuell markieren und als Lesezeichen-URL einfügen.',
+      )
+    }
+  }
+
+  async function handleClipboardImportClick() {
+    setError(null)
+    setImportMissBanner(false)
+    const ok = await tryClipboardImport(true)
+    if (!ok) {
+      setError(
+        'Zwischenablage leer oder zu kurz. Job-Text markieren → kopieren, dann erneut importieren.',
+      )
+      setClipboardHint(true)
+    }
+  }
+
   async function handleLogout() {
     await signOut()
   }
 
-  async function submitJob(e: FormEvent) {
+  async function submitJobToPool(e: FormEvent) {
     e.preventDefault()
     setSubmitting(true)
     setNotice(null)
-    const { error: err } = await createJobSuggestion({
-      title: jobTitle,
-      company_name: jobCompany,
-      source_url: jobUrl,
-      notes: jobNotes,
-      job_description_raw: jobRaw,
-    })
-    setSubmitting(false)
-    if (err) {
-      setNotice(err)
+    setError(null)
+
+    const { userId, error: ownerError } = await resolveAdminPoolOwnerId()
+    if (!userId) {
+      setSubmitting(false)
+      setError(ownerError || 'Admin-Pool-Besitzer nicht gefunden.')
       return
     }
+
+    const { data, error: err } = await createJobPoolEntry({
+      user_id: userId,
+      application_type: 'regular',
+      title: jobTitle,
+      company_name: jobCompany,
+      status: 'gesammelt',
+      source_url: jobUrl || null,
+      notes: jobNotes || null,
+      job_description: jobRaw || null,
+    })
+    setSubmitting(false)
+
+    if (err || !data) {
+      setError(err || 'Speichern fehlgeschlagen.')
+      return
+    }
+
     setJobTitle('')
     setJobCompany('')
     setJobUrl('')
     setJobNotes('')
     setJobRaw('')
-    setSuggestMode(null)
-    setNotice('Stelle vorgeschlagen — Admin sieht sie in der Inbox.')
+    setPanel(null)
+    setNotice('Stelle in Svens Pool übernommen.')
+    await load()
+    setEditingId(data.id)
+    setTab('offen')
   }
 
   async function submitCompany(e: FormEvent) {
@@ -182,8 +452,15 @@ export function MonitorPage() {
     setCompanyName('')
     setCompanyUrl('')
     setCompanyNotes('')
-    setSuggestMode(null)
+    setPanel(null)
     setNotice('Unternehmen vorgeschlagen — Admin sieht es unter „Interessante Unternehmen“.')
+  }
+
+  function startEdit(id: string, e?: ReactMouseEvent) {
+    e?.stopPropagation()
+    e?.preventDefault()
+    setEditingId(id)
+    setPanel(null)
   }
 
   const tabs: Array<{ id: MonitorTab; label: string; count: number }> = [
@@ -192,190 +469,478 @@ export function MonitorPage() {
     { id: 'rueckmeldungen', label: 'Rückmeldungen', count: feedback.length },
   ]
 
+  const profileLabel = displayNameFromUser(user) || user?.email || 'Profil'
+
+  function renderPoolList(items: JobPoolRow[]) {
+    if (items.length === 0) {
+      return <p className="text-sm monitor-shell__muted">Keine offenen Pool-Einträge.</p>
+    }
+
+    if (viewMode === 'cards') {
+      return (
+        <div className="monitor-card-grid">
+          {items.map((item) => (
+            <MonitorFlipCard
+              key={item.id}
+              ariaLabel={`${item.company_name}: ${item.title || 'Ohne Titel'}`}
+              front={
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.14em] monitor-shell__muted truncate">
+                    {item.company_name || 'Firma'}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-snug line-clamp-4">
+                    {item.title || 'Ohne Titel'}
+                  </p>
+                  <div className="mt-auto pt-3">
+                    <Badge label={POOL_STATUS_LABEL[item.status]} />
+                  </div>
+                </>
+              }
+              back={
+                <>
+                  <p className="text-xs font-medium">{item.company_name}</p>
+                  <p className="mt-1 text-[11px] monitor-shell__muted">
+                    Angelegt {formatDate(item.created_at)}
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed flex-1 overflow-hidden">
+                    {truncate(item.job_description || item.notes, 220) ||
+                      'Keine Beschreibung.'}
+                  </p>
+                  <button
+                    type="button"
+                    className="monitor-shell__btn monitor-shell__btn--primary mt-2 w-full justify-center text-xs"
+                    onClick={(e) => startEdit(item.id, e)}
+                  >
+                    <Pencil className="w-3.5 h-3.5" aria-hidden />
+                    Bearbeiten
+                  </button>
+                </>
+              }
+            />
+          ))}
+        </div>
+      )
+    }
+
+    return (
+      <ul className="space-y-2">
+        {items.map((item) => (
+          <li key={item.id} className="monitor-shell__panel p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-[0.12em] monitor-shell__muted truncate">
+                  {item.company_name || 'Firma'}
+                </p>
+                <p className="text-sm font-semibold truncate">
+                  {item.title || 'Ohne Titel'}
+                </p>
+              </div>
+              <Badge label={POOL_STATUS_LABEL[item.status]} />
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <p className="text-xs monitor-shell__muted">
+                Angelegt {formatDate(item.created_at)}
+              </p>
+              <button
+                type="button"
+                onClick={() => startEdit(item.id)}
+                className="monitor-shell__btn monitor-shell__btn--ghost !py-1 !px-2 text-xs"
+              >
+                <Pencil className="w-3.5 h-3.5" aria-hidden />
+                Bearbeiten
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  function renderAppList(items: ApplicationRow[], empty: string, dateLabel: (a: ApplicationRow) => string) {
+    if (items.length === 0) {
+      return <p className="text-sm monitor-shell__muted">{empty}</p>
+    }
+
+    if (viewMode === 'cards') {
+      return (
+        <div className="monitor-card-grid">
+          {items.map((app) => (
+            <MonitorFlipCard
+              key={app.id}
+              ariaLabel={`${app.company_name}: ${app.job_title}`}
+              front={
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.14em] monitor-shell__muted truncate">
+                    {app.company_name}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-snug line-clamp-4">
+                    {app.job_title}
+                  </p>
+                  <div className="mt-auto pt-3">
+                    <Badge label={app.status} />
+                  </div>
+                </>
+              }
+              back={
+                <>
+                  <p className="text-xs font-medium">{app.company_name}</p>
+                  <p className="mt-1 text-[11px] monitor-shell__muted">{dateLabel(app)}</p>
+                  <p className="mt-2 text-xs leading-relaxed flex-1 overflow-hidden">
+                    {truncate(app.feedback_notes, 220) ||
+                      'Status nur lesbar — Schreiben/Planen nur Admin.'}
+                  </p>
+                </>
+              }
+            />
+          ))}
+        </div>
+      )
+    }
+
+    return (
+      <ul className="space-y-2">
+        {items.map((app) => (
+          <li key={app.id} className="monitor-shell__panel p-4 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-[0.12em] monitor-shell__muted truncate">
+                  {app.company_name}
+                </p>
+                <p className="text-sm font-semibold truncate">{app.job_title}</p>
+              </div>
+              <Badge label={app.status} />
+            </div>
+            <p className="text-xs monitor-shell__muted">{dateLabel(app)}</p>
+            {app.feedback_notes?.trim() ? (
+              <p className="text-sm whitespace-pre-wrap">{app.feedback_notes}</p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
   return (
-    <div className="admin-shell min-h-screen bg-zinc-100 text-zinc-900">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto max-w-3xl px-4 py-5 flex items-start justify-between gap-4">
+    <div className="monitor-shell">
+      <header className="monitor-shell__header">
+        <div className="mx-auto max-w-4xl px-4 py-5 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-400 font-medium">
+            <p className="text-[11px] uppercase tracking-[0.18em] monitor-shell__muted font-medium">
               Personal ATS
             </p>
             <h1 className="mt-1 text-xl font-semibold tracking-tight">Monitor</h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Nur lesen — Bewerbungsstand &amp; Vorschläge.
+            <p className="mt-1 text-sm monitor-shell__muted">
+              Stellen in Svens Pool — Status lesen, Details bearbeiten.
             </p>
           </div>
-          <div className="text-right space-y-2">
-            <p className="text-xs text-zinc-500 truncate max-w-[12rem]" title={user?.email ?? undefined}>
-              {user?.email}
+          <div className="flex flex-col items-end gap-2">
+            <ThemeSwitcher compact />
+            <p className="text-xs monitor-shell__muted truncate max-w-[14rem]" title={profileLabel}>
+              {profileLabel}
             </p>
-            <button
-              type="button"
-              onClick={() => void handleLogout()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50"
-            >
-              <LogOut className="w-3.5 h-3.5" aria-hidden />
-              Abmelden
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPanel((p) => (p === 'profile' ? null : 'profile'))
+                  setEditingId(null)
+                }}
+                className="monitor-shell__btn monitor-shell__btn--ghost !py-1.5 !px-2.5 text-xs"
+              >
+                <UserRound className="w-3.5 h-3.5" aria-hidden />
+                Profil
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="monitor-shell__btn monitor-shell__btn--ghost !py-1.5 !px-2.5 text-xs"
+              >
+                <LogOut className="w-3.5 h-3.5" aria-hidden />
+                Abmelden
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6 space-y-6">
+      <main className="mx-auto max-w-4xl px-4 py-6 space-y-6">
+        <section
+          className="monitor-shell__panel p-4 space-y-3"
+          aria-labelledby="monitor-bookmarklet-heading"
+        >
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-md border p-2" style={{ borderColor: 'var(--surface-border)' }}>
+              <Bookmark className="w-4 h-4" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h2 id="monitor-bookmarklet-heading" className="text-sm font-semibold">
+                Job → Pool (Bookmarklet)
+              </h2>
+              <p className="mt-1 text-xs monitor-shell__muted">
+                Auf der Stellenanzeige klicken — landet direkt in Svens Stellen-Pool.
+                Danach kannst du Details bearbeiten (kein Initiativ-/Bewerbungs-Umschalten).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void copyBookmarkletCode()}
+              className="monitor-shell__btn monitor-shell__btn--primary"
+            >
+              <Copy className="w-4 h-4" aria-hidden />
+              {bookmarkletCopied ? 'Kopiert!' : 'Bookmarklet-Code kopieren'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleClipboardImportClick()}
+              disabled={importing}
+              className="monitor-shell__btn monitor-shell__btn--ghost"
+            >
+              <ClipboardPaste className="w-4 h-4" aria-hidden />
+              {importing ? 'Importiere …' : 'Zwischenablage importieren'}
+            </button>
+            <a
+              ref={bookmarkletLinkRef}
+              className="monitor-shell__btn monitor-shell__btn--ghost cursor-grab text-xs"
+              draggable
+              onDragStart={(e) => {
+                if (bookmarkletHref) {
+                  e.dataTransfer.setData('text/uri-list', bookmarkletHref)
+                  e.dataTransfer.setData('text/plain', bookmarkletHref)
+                }
+              }}
+              onClick={(e) => e.preventDefault()}
+            >
+              Lesezeichen hierher ziehen
+            </a>
+          </div>
+
+          {bookmarkletCopied && (
+            <p className="text-xs monitor-shell__muted">
+              Code in der Zwischenablage. Chrome-Lesezeichen anlegen und URL ersetzen.
+            </p>
+          )}
+          {(clipboardHint || importMissBanner) && (
+            <p className="text-xs monitor-shell__muted">
+              Kein Auto-Import erkannt. Bitte „Zwischenablage importieren“ nutzen oder Bookmarklet neu anlegen.
+            </p>
+          )}
+          {bookmarkletHref && (
+            <textarea
+              readOnly
+              value={bookmarkletHref}
+              rows={2}
+              className="monitor-shell__input font-mono text-[10px]"
+              aria-label="Bookmarklet-Code"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          )}
+        </section>
+
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => {
-              setSuggestMode('job')
+              setPanel('add-job')
+              setEditingId(null)
               setNotice(null)
             }}
-            className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="monitor-shell__btn monitor-shell__btn--primary"
           >
             <Plus className="w-4 h-4" aria-hidden />
-            Stelle vorschlagen
+            Stelle zum Pool
           </button>
           <button
             type="button"
             onClick={() => {
-              setSuggestMode('company')
+              setPanel('company')
+              setEditingId(null)
               setNotice(null)
             }}
-            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            className="monitor-shell__btn monitor-shell__btn--ghost"
           >
             <Building2 className="w-4 h-4" aria-hidden />
             Unternehmen vorschlagen
           </button>
+          <div className="ml-auto monitor-view-toggle" role="group" aria-label="Ansicht">
+            <button
+              type="button"
+              className={[
+                'monitor-view-toggle__btn',
+                viewMode === 'list' ? 'monitor-view-toggle__btn--active' : '',
+              ].join(' ')}
+              aria-pressed={viewMode === 'list'}
+              onClick={() => setViewMode('list')}
+            >
+              <List className="w-3.5 h-3.5" aria-hidden />
+              Liste
+            </button>
+            <button
+              type="button"
+              className={[
+                'monitor-view-toggle__btn',
+                viewMode === 'cards' ? 'monitor-view-toggle__btn--active' : '',
+              ].join(' ')}
+              aria-pressed={viewMode === 'cards'}
+              onClick={() => setViewMode('cards')}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" aria-hidden />
+              Karten
+            </button>
+          </div>
         </div>
 
         {notice && (
-          <div
-            role="status"
-            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700"
-          >
+          <div role="status" className="monitor-shell__panel px-3 py-2 text-sm">
             {notice}
           </div>
         )}
 
-        {suggestMode === 'job' && (
+        {panel === 'profile' && (
+          <MonitorProfilePanel
+            user={user}
+            onClose={() => setPanel(null)}
+            onSaved={(msg) => setNotice(msg)}
+          />
+        )}
+
+        {editingEntry && (
+          <MonitorPoolEditor
+            entry={editingEntry}
+            onCancel={() => setEditingId(null)}
+            onSaved={(row, msg) => {
+              setPool((prev) => prev.map((p) => (p.id === row.id ? row : p)))
+              setNotice(msg)
+              setEditingId(null)
+            }}
+          />
+        )}
+
+        {panel === 'add-job' && (
           <form
-            onSubmit={(e) => void submitJob(e)}
-            className="rounded-lg border border-zinc-200 bg-white p-4 space-y-3 shadow-sm"
+            onSubmit={(e) => void submitJobToPool(e)}
+            className="monitor-shell__panel p-4 space-y-3"
           >
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold">Stelle vorschlagen</h2>
+              <h2 className="text-sm font-semibold">Stelle in den Pool</h2>
               <button
                 type="button"
-                className="text-xs text-zinc-500 hover:text-zinc-800"
-                onClick={() => setSuggestMode(null)}
+                className="text-xs monitor-shell__muted"
+                onClick={() => setPanel(null)}
               >
                 Schließen
               </button>
             </div>
+            <p className="text-xs monitor-shell__muted">
+              Wird als reguläre Stelle (gesammelt) bei Sven angelegt — ohne Initiativ-Umschalten.
+            </p>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Titel *</span>
+              <span className="text-xs font-medium monitor-shell__muted">Titel *</span>
               <input
                 required
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Firma *</span>
+              <span className="text-xs font-medium monitor-shell__muted">Firma *</span>
               <input
                 required
                 value={jobCompany}
                 onChange={(e) => setJobCompany(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Link</span>
+              <span className="text-xs font-medium monitor-shell__muted">Link</span>
               <input
                 type="url"
                 value={jobUrl}
                 onChange={(e) => setJobUrl(e.target.value)}
                 placeholder="https://…"
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Notiz</span>
+              <span className="text-xs font-medium monitor-shell__muted">Notiz</span>
               <textarea
                 value={jobNotes}
                 onChange={(e) => setJobNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input resize-y"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Rohtext (optional)</span>
+              <span className="text-xs font-medium monitor-shell__muted">Rohtext (optional)</span>
               <textarea
                 value={jobRaw}
                 onChange={(e) => setJobRaw(e.target.value)}
                 rows={4}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm font-mono"
+                className="monitor-shell__input resize-y font-mono"
               />
             </label>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="monitor-shell__btn monitor-shell__btn--primary"
             >
               <Send className="w-4 h-4" aria-hidden />
-              {submitting ? 'Senden …' : 'Vorschlag senden'}
+              {submitting ? 'Senden …' : 'In den Pool legen'}
             </button>
           </form>
         )}
 
-        {suggestMode === 'company' && (
+        {panel === 'company' && (
           <form
             onSubmit={(e) => void submitCompany(e)}
-            className="rounded-lg border border-zinc-200 bg-white p-4 space-y-3 shadow-sm"
+            className="monitor-shell__panel p-4 space-y-3"
           >
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">Unternehmen vorschlagen</h2>
               <button
                 type="button"
-                className="text-xs text-zinc-500 hover:text-zinc-800"
-                onClick={() => setSuggestMode(null)}
+                className="text-xs monitor-shell__muted"
+                onClick={() => setPanel(null)}
               >
                 Schließen
               </button>
             </div>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Name *</span>
+              <span className="text-xs font-medium monitor-shell__muted">Name *</span>
               <input
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Unternehmens-Link *</span>
+              <span className="text-xs font-medium monitor-shell__muted">Unternehmens-Link *</span>
               <input
                 required
                 type="url"
                 value={companyUrl}
                 onChange={(e) => setCompanyUrl(e.target.value)}
                 placeholder="https://…"
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input"
               />
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-zinc-600">Notiz (optional)</span>
+              <span className="text-xs font-medium monitor-shell__muted">Notiz (optional)</span>
               <textarea
                 value={companyNotes}
                 onChange={(e) => setCompanyNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                className="monitor-shell__input resize-y"
               />
             </label>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="monitor-shell__btn monitor-shell__btn--primary"
             >
               <Send className="w-4 h-4" aria-hidden />
               {submitting ? 'Senden …' : 'Vorschlag senden'}
@@ -383,98 +948,50 @@ export function MonitorPage() {
           </form>
         )}
 
-        <div className="flex gap-1 border-b border-zinc-200">
+        <div className="flex gap-1 border-b" style={{ borderColor: 'var(--surface-border)' }}>
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
               className={[
-                'px-3 py-2 text-sm border-b-2 -mb-px transition-colors',
-                tab === t.id
-                  ? 'border-zinc-900 text-zinc-900 font-medium'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800',
+                'monitor-shell__tab',
+                tab === t.id ? 'monitor-shell__tab--active' : '',
               ].join(' ')}
             >
               {t.label}
-              <span className="ml-1.5 tabular-nums text-zinc-400">{t.count}</span>
+              <span className="ml-1.5 tabular-nums monitor-shell__muted">{t.count}</span>
             </button>
           ))}
         </div>
 
-        {loading && (
-          <p className="text-sm text-zinc-500">Daten werden geladen …</p>
-        )}
+        {loading && <p className="text-sm monitor-shell__muted">Daten werden geladen …</p>}
         {error && (
-          <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          <div
+            role="alert"
+            className="rounded-md border px-3 py-2 text-sm"
+            style={{ borderColor: 'var(--surface-border)' }}
+          >
             {error}
           </div>
         )}
 
         {!loading && !error && tab === 'offen' && (
-          <section className="space-y-4">
+          <section className="space-y-6">
             <div>
-              <h2 className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-400 mb-2">
+              <h2 className="text-xs font-medium uppercase tracking-[0.14em] monitor-shell__muted mb-2">
                 Stellen-Pool
               </h2>
-              {openPool.length === 0 ? (
-                <p className="text-sm text-zinc-500">Keine offenen Pool-Einträge.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {openPool.map((item) => (
-                    <li
-                      key={item.id}
-                      className="rounded-lg border border-zinc-200 bg-white p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-xs uppercase tracking-[0.12em] text-zinc-400 truncate">
-                            {item.company_name || 'Firma'}
-                          </p>
-                          <p className="text-sm font-semibold text-zinc-900 truncate">
-                            {item.title || 'Ohne Titel'}
-                          </p>
-                        </div>
-                        <Badge label={item.status} />
-                      </div>
-                      <p className="mt-3 text-xs text-zinc-500">
-                        Angelegt {formatDate(item.created_at)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {renderPoolList(openPool)}
             </div>
             <div>
-              <h2 className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-400 mb-2">
+              <h2 className="text-xs font-medium uppercase tracking-[0.14em] monitor-shell__muted mb-2">
                 Bewerbungen in Arbeit
               </h2>
-              {openApps.length === 0 ? (
-                <p className="text-sm text-zinc-500">Keine offenen Bewerbungen.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {openApps.map((app) => (
-                    <li
-                      key={app.id}
-                      className="rounded-lg border border-zinc-200 bg-white p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-xs uppercase tracking-[0.12em] text-zinc-400 truncate">
-                            {app.company_name}
-                          </p>
-                          <p className="text-sm font-semibold text-zinc-900 truncate">
-                            {app.job_title}
-                          </p>
-                        </div>
-                        <Badge label={app.status} />
-                      </div>
-                      <p className="mt-3 text-xs text-zinc-500">
-                        Angelegt {formatDate(app.created_at)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+              {renderAppList(
+                openApps,
+                'Keine offenen Bewerbungen.',
+                (a) => `Angelegt ${formatDate(a.created_at)}`,
               )}
             </div>
           </section>
@@ -482,80 +999,27 @@ export function MonitorPage() {
 
         {!loading && !error && tab === 'verschickt' && (
           <section>
-            {sent.length === 0 ? (
-              <p className="text-sm text-zinc-500">Noch keine verschickten Bewerbungen.</p>
-            ) : (
-              <ul className="space-y-2">
-                {sent.map((app) => (
-                  <li
-                    key={app.id}
-                    className="rounded-lg border border-zinc-200 bg-white p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-xs uppercase tracking-[0.12em] text-zinc-400 truncate">
-                          {app.company_name}
-                        </p>
-                        <p className="text-sm font-semibold text-zinc-900 truncate">
-                          {app.job_title}
-                        </p>
-                      </div>
-                      <Badge label={app.status} />
-                    </div>
-                    <p className="mt-3 text-xs text-zinc-500">
-                      Beworben am {formatDate(app.applied_at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+            {renderAppList(
+              sent,
+              'Noch keine verschickten Bewerbungen.',
+              (a) => `Beworben am ${formatDate(a.applied_at)}`,
             )}
           </section>
         )}
 
-        {!loading && !error && tab === 'rueckmeldungen' && (
-          <section>
-            {feedback.length === 0 ? (
-              <p className="text-sm text-zinc-500">Noch keine Rückmeldungen.</p>
-            ) : (
-              <ul className="space-y-2">
-                {feedback.map((app) => (
-                  <li
-                    key={app.id}
-                    className="rounded-lg border border-zinc-200 bg-white p-4 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-xs uppercase tracking-[0.12em] text-zinc-400 truncate">
-                          {app.company_name}
-                        </p>
-                        <p className="text-sm font-semibold text-zinc-900 truncate">
-                          {app.job_title}
-                        </p>
-                      </div>
-                      <Badge label={app.status} />
-                    </div>
-                    {app.feedback_at && (
-                      <p className="text-xs text-zinc-500">
-                        Rückmeldung {formatDate(app.feedback_at)}
-                      </p>
-                    )}
-                    {app.feedback_notes?.trim() ? (
-                      <p className="text-sm text-zinc-700 whitespace-pre-wrap">
-                        {app.feedback_notes}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-zinc-400">Kein Feedback-Text.</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+        {!loading && !error && tab === 'rueckmeldungen' &&
+          renderAppList(
+            feedback,
+            'Noch keine Rückmeldungen.',
+            (a) =>
+              a.feedback_at
+                ? `Rückmeldung ${formatDate(a.feedback_at)}`
+                : `Angelegt ${formatDate(a.created_at)}`,
+          )}
 
-        <p className="text-[11px] text-zinc-400 flex items-center gap-1">
+        <p className="text-[11px] monitor-shell__muted flex items-center gap-1">
           <ExternalLink className="w-3 h-3" aria-hidden />
-          Schreiben, Generieren und Planen nur für Admin.
+          Bewerbung anlegen, Initiativ umschalten, Generieren und Planen nur für Admin.
         </p>
       </main>
     </div>

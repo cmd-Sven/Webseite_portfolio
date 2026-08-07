@@ -1,4 +1,5 @@
 import { BarChart3, Code, Compass, Paintbrush } from 'lucide-react'
+import { BlogTermHint } from '../components/BlogTermHint'
 import { PortfolioCard } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
@@ -22,7 +23,8 @@ export function ExpertiseSection() {
                 </div>
                 <h3 className="heading-section text-lg font-bold mb-2">Datenanalyse</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  A/B-Testing, Funnel-Analysen und datenbasierte Conversion-Optimierung. (Aktuell in
+                  <BlogTermHint termKey="A/B-Testing" />, <BlogTermHint termKey="Funnel-Analysen" /> und
+                  datenbasierte <BlogTermHint termKey="Conversion-Optimierung" />. (Aktuell in
                   fortgeschrittener Spezialisierung).
                 </p>
               </div>
@@ -39,8 +41,9 @@ export function ExpertiseSection() {
                 </div>
                 <h3 className="heading-section text-lg font-bold mb-2">Webentwicklung</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Performante SPAs und Architekturen. Sicher in React + TS, Vue 3 und Utility-First CSS
-                  (Tailwind). Sauberer, wartbarer Code.
+                  Performante <BlogTermHint termKey="SPAs" /> und Architekturen. Sicher in React + TS,
+                  Vue 3 und Utility-First CSS (<BlogTermHint termKey="Tailwind" />). Sauberer,
+                  wartbarer Code.
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-800 text-[10px] font-mono text-violet-400 flex justify-between">
@@ -56,8 +59,9 @@ export function ExpertiseSection() {
                 </div>
                 <h3 className="heading-section text-lg font-bold mb-2">UI/UX-Gesetze</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Konzeption nach psychologischen UI-Gesetzen (Fitts', Hick's Law). Fokus auf intuitive
-                  User Journeys und Barrierefreiheit (WCAG).
+                  Konzeption nach psychologischen UI-Gesetzen (Fitts&apos;, Hick&apos;s Law). Fokus auf
+                  intuitive <BlogTermHint termKey="User Journeys" /> und{' '}
+                  <BlogTermHint termKey="Barrierefreiheit" /> (<BlogTermHint termKey="WCAG" />).
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-800 text-[10px] font-mono text-cyan-400 flex justify-between">

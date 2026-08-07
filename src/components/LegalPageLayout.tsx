@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { BrandLogo } from './BrandLogo'
 import { ThemeSwitcher } from './ThemeSwitcher'
 
 interface LegalPageLayoutProps {
@@ -30,9 +31,9 @@ export function LegalPageLayout({ title, children }: LegalPageLayoutProps) {
           </Link>
           <div className="flex items-center gap-3 shrink-0">
             <ThemeSwitcher compact />
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest hidden sm:inline">
-              Sven Sieber
-            </span>
+            <Link to="/" className="shrink-0" aria-label="Zur Startseite">
+              <BrandLogo variant="mark" size="sm" />
+            </Link>
           </div>
         </div>
       </header>

@@ -13,6 +13,13 @@ interface BlogPostModalProps {
 
 const THEME_DEMO_MARKER = '{{theme-demo}}'
 const TERM_MARKER_RE = /\{\{term:([^}]+)\}\}/g
+/** {{quote:Text}} – hervorgehobenes Zitat / Fazit-Zeile */
+const QUOTE_MARKER_RE = /^\{\{quote:(.+)\}\}$/s
+/**
+ * {{monologue:Speaker|Zitat|Aside}}
+ * Aside = sarkastischer Autor-Kommentar (Parenthese).
+ */
+const MONOLOGUE_MARKER_RE = /^\{\{monologue:([^|]+)\|([^|]+)\|([^}]+)\}\}$/s
 
 function renderTerms(text: string, keyPrefix: string) {
   const nodes: ReactNode[] = []
@@ -52,11 +59,38 @@ function renderInline(text: string) {
 }
 
 function renderContentBlock(block: string, index: number) {
-  if (block.trim() === THEME_DEMO_MARKER) {
+  const trimmed = block.trim()
+
+  if (trimmed === THEME_DEMO_MARKER) {
     return <DesignTokensDemo key={index} />
   }
 
-  const heading = block.match(/^##\s+(.+)$/)
+  const monologue = trimmed.match(MONOLOGUE_MARKER_RE)
+  if (monologue) {
+    const speaker = monologue[1].trim()
+    const quote = monologue[2].trim()
+    const aside = monologue[3].trim()
+    return (
+      <figure key={index} className="blog-monologue">
+        <figcaption className="blog-monologue__speaker">{renderInline(speaker)}</figcaption>
+        <blockquote className="blog-monologue__quote">
+          <p>{renderInline(quote)}</p>
+        </blockquote>
+        <p className="blog-monologue__aside">{renderInline(aside)}</p>
+      </figure>
+    )
+  }
+
+  const quote = trimmed.match(QUOTE_MARKER_RE)
+  if (quote) {
+    return (
+      <blockquote key={index} className="blog-quote">
+        <p>{renderInline(quote[1].trim())}</p>
+      </blockquote>
+    )
+  }
+
+  const heading = trimmed.match(/^##\s+(.+)$/)
   if (heading) {
     return (
       <h3 key={index} className="heading-section text-base font-bold pt-1">
@@ -64,7 +98,7 @@ function renderContentBlock(block: string, index: number) {
       </h3>
     )
   }
-  return <p key={index}>{renderInline(block)}</p>
+  return <p key={index}>{renderInline(trimmed)}</p>
 }
 
 export function BlogPostModal({ post, onClose }: BlogPostModalProps) {

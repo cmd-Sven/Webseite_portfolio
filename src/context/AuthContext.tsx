@@ -108,14 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const normalizedEmail = email.trim().toLowerCase()
 
-      if (!isAllowedAtsUser(normalizedEmail)) {
-        return {
-          ok: false,
-          errorCode: 'not_allowed',
-          message: 'Dieser Account hat keinen ATS-Zugriff.',
-        }
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
@@ -128,6 +120,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           lower.includes('invalid credentials') ||
           error.status === 400
 
+        // Unbekannte E-Mails → gleiche Meldung wie falsche Credentials (kein User-Enumeration).
+        // Bekannte Env-E-Mails ohne Treffer bleiben „credentials“.
+        if (isInvalid && !isAllowedAtsUser(normalizedEmail)) {
+          return {
+            ok: false,
+            errorCode: 'credentials',
+            message: 'E-Mail oder Passwort ist falsch.',
+          }
+        }
+
         return {
           ok: false,
           errorCode: isInvalid ? 'credentials' : 'unknown',
@@ -137,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Rolle aus app_metadata (auch nach E-Mail-Änderung gültig)
       const role = resolveAppRole(data.user)
       if (!role) {
         await supabase.auth.signOut({ scope: 'local' })

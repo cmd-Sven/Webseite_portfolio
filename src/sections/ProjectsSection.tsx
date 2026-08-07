@@ -1,5 +1,7 @@
 import { ArrowRight, ExternalLink } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { CASE_STUDIES, getProjectGlowClass, getProjectHeaderGradient } from '../data/caseStudies'
+import { BlogTermHint } from '../components/BlogTermHint'
 import { PortfolioCard } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
@@ -8,6 +10,18 @@ import type { CaseStudy } from '../types/portfolio'
 
 interface ProjectsSectionProps {
   onSelectProject: (project: CaseStudy) => void
+}
+
+function projectTeaser(project: CaseStudy): ReactNode {
+  if (project.id === 'bookworm') {
+    return (
+      <>
+        Ich habe den Ausleihprozess digitalisiert: Katalog, Fristen, Auth – Next.js als Hauptapp,{' '}
+        <BlogTermHint termKey="Streamlit" /> als schneller Prototyp auf derselben Supabase-DB.
+      </>
+    )
+  }
+  return project.teaser
 }
 
 export function ProjectsSection({ onSelectProject }: ProjectsSectionProps) {
@@ -65,7 +79,9 @@ export function ProjectsSection({ onSelectProject }: ProjectsSectionProps) {
 
                       <div className="p-5 space-y-2">
                         <h3 className="heading-section text-base font-bold">{project.subtitle}</h3>
-                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">{project.teaser}</p>
+                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                          {projectTeaser(project)}
+                        </p>
                       </div>
                     </div>
 

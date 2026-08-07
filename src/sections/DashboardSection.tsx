@@ -1,5 +1,6 @@
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
+import { BlogTermHint } from '../components/BlogTermHint'
 import { DashboardDemos } from '../components/DashboardDemos'
 import { AnalyticsDemoVisual } from '../components/analytics/AnalyticsDemoVisual'
 
@@ -13,9 +14,18 @@ export function DashboardSection() {
         <RevealGroup className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(280px,380px)] gap-8 lg:gap-10 items-center w-full">
           <div className="flex flex-col gap-6 min-h-0 w-full max-w-2xl lg:max-w-none">
             <SectionHeader
-              eyebrow="Live Demo"
+              eyebrow="Live Demos"
               title="Analytics zum Anfassen"
-              lead="Daten sagen mir erst dann etwas, wenn ich sie bewegen kann. Deshalb habe ich eine interaktive Demo gebaut: Vue-Slider steuern Traffic, Conversion und UX-Lift – die SVG-Charts reagieren live. So wird aus Parameter-Tweaks sofort sichtbar, wo Wochenverlauf, Funnel und Performance sich verschieben."
+              lead={
+                <>
+                  Daten sagen mir erst dann etwas, wenn ich sie bewegen kann. Drei interaktive Demos:{' '}
+                  <BlogTermHint termKey="Conversion" />
+                  /UX-Lift mit live gekoppelten Charts, ein Simulator für{' '}
+                  <BlogTermHint termKey="A/B-Test">A/B-Tests</BlogTermHint> mit{' '}
+                  <BlogTermHint termKey="Chi-Quadrat" /> – und Performance &amp; Speed-Impact mit
+                  Bounce-Kurve.
+                </>
+              }
               accent="cyan"
             />
             <DashboardDemos />

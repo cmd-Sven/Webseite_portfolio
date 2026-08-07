@@ -1,5 +1,6 @@
 import { ArrowRight, FileText, Sparkles } from 'lucide-react'
 import { BlogTeaserSlider } from '../components/BlogTeaserSlider'
+import { BlogTermHint } from '../components/BlogTermHint'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { RESUME_PDF_PATH } from '../data/navigation'
 import type { BlogPost } from '../types/blog'
@@ -13,7 +14,7 @@ export function HeroSection({ onScrollTo, onOpenBlogPost }: HeroSectionProps) {
   return (
     <section
       id="hero"
-      className="scroll-section section-shell section-shell--hero flex items-center justify-center"
+      className="scroll-section section-shell section-shell--hero section-in-view flex items-center justify-center"
     >
       <SectionRevealLayer className="max-w-6xl w-full">
         <RevealGroup className="hero-layout hero-banner">
@@ -46,8 +47,9 @@ export function HeroSection({ onScrollTo, onOpenBlogPost }: HeroSectionProps) {
                 </h1>
 
                 <p className="max-w-xl text-sm leading-relaxed text-slate-400 md:text-lg">
-                  Ich verknüpfe tiefgreifendes UX/UI-Verständnis und moderne Full-Stack-Entwicklung mit
-                  fortgeschrittener KI-Datenanalyse. Von der visuellen Ästhetik über die technische
+                  Ich verknüpfe <BlogTermHint termKey="UX/UI" />, moderne{' '}
+                  <BlogTermHint termKey="Full-Stack-Entwicklung" /> und fortgeschrittene KI-
+                  <BlogTermHint termKey="Datenanalyse" />. Von der visuellen Ästhetik über die technische
                   Software-Architektur bis hin zur datenbasierten Optimierung baue ich digitale Ökosysteme,
                   die nicht nur gut aussehen, sondern performen.
                 </p>

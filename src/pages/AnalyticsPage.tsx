@@ -1,6 +1,7 @@
 import { useEffect, type ComponentType } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { AnalyticsPageLayout } from '../components/analytics/AnalyticsPageLayout'
+import { DemoPageLayout } from '../components/demo/DemoPageLayout'
+import { ANALYTICS_DEMO_GLOSSARY } from '../data/demoGlossary'
 import { AnalyticsChartFrame } from '../components/analytics/AnalyticsChartFrame'
 import {
   FunnelChart,
@@ -39,6 +40,10 @@ export function AnalyticsPage() {
 
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, '')
+    if (hash === 'ab-test') {
+      window.location.replace('/demo/ab-test')
+      return
+    }
     if (!hash) return
     const target = document.getElementById(hash)
     if (!target) return
@@ -49,10 +54,13 @@ export function AnalyticsPage() {
   }, [])
 
   return (
-    <AnalyticsPageLayout
+    <DemoPageLayout
+      activeDemo="analytics"
       title="Analytics & Statistiken"
       subtitle="Vue-gesteuerte Parameter und SVG-Visualisierungen auf einer scrollbaren Seite – Änderungen wirken live auf alle Charts."
       chartLabel="Live gekoppelt"
+      glossary={ANALYTICS_DEMO_GLOSSARY}
+      glossaryTitle="Legende · Conversion / UX-Lift"
     >
       <p className="text-[10px] font-mono text-cyan-400/90 border border-cyan-500/15 rounded-lg px-3 py-2 bg-cyan-500/5 mb-8">
         {formatSettingsHint(settings)}
@@ -118,14 +126,25 @@ export function AnalyticsPage() {
           })}
         </div>
       </div>
-    </AnalyticsPageLayout>
+    </DemoPageLayout>
   )
 }
 
-/** Alte Einzel-Routen → Hub mit Anker */
+/** Alte /analytics-URLs (inkl. #ab-test) → neue Demo-Routen */
+export function AnalyticsLegacyRedirect() {
+  const hash = typeof window !== 'undefined' ? window.location.hash.replace(/^#/, '') : ''
+  if (hash === 'ab-test') return <Navigate to="/demo/ab-test" replace />
+  if (hash && ANALYTICS_METRICS.some((m) => m.id === hash)) {
+    return <Navigate to={`/demo/analytics#${hash}`} replace />
+  }
+  return <Navigate to="/demo/analytics" replace />
+}
+
+/** Alte Einzel-Routen → Demo-Hub mit Anker */
 export function AnalyticsMetricRedirect() {
   const { metricId } = useParams<{ metricId: string }>()
+  if (metricId === 'ab-test') return <Navigate to="/demo/ab-test" replace />
   const valid = ANALYTICS_METRICS.some((m) => m.id === metricId)
-  if (!valid) return <Navigate to="/analytics" replace />
-  return <Navigate to={`/analytics#${metricId}`} replace />
+  if (!valid) return <Navigate to="/demo/analytics" replace />
+  return <Navigate to={`/demo/analytics#${metricId}`} replace />
 }

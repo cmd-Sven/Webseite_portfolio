@@ -3,7 +3,7 @@ import type { AnalyticsMetric, AnalyticsMetricId } from '../types/analytics'
 export const ANALYTICS_METRICS: AnalyticsMetric[] = [
   {
     id: 'retention',
-    path: '/analytics#retention',
+    path: '/demo/analytics#retention',
     title: 'User Traffic (Wochenverlauf)',
     chartLabel: 'Line Chart',
     subtitle: 'Aktive Sitzungen über die Woche',
@@ -16,7 +16,7 @@ export const ANALYTICS_METRICS: AnalyticsMetric[] = [
   },
   {
     id: 'funnel',
-    path: '/analytics#funnel',
+    path: '/demo/analytics#funnel',
     title: 'Conversion Funnel Drop-off',
     chartLabel: 'Funnel Map',
     subtitle: 'Absprünge entlang der Customer Journey',
@@ -29,7 +29,7 @@ export const ANALYTICS_METRICS: AnalyticsMetric[] = [
   },
   {
     id: 'speed',
-    path: '/analytics#speed',
+    path: '/demo/analytics#speed',
     title: 'Performance vs CRO Impact',
     chartLabel: 'Scatter Plot',
     subtitle: 'Ladezeit und Conversion-Rate im Vergleich',

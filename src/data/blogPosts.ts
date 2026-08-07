@@ -9,6 +9,94 @@ export const BLOG_COVER_PLACEHOLDER = '/blog/placeholder.svg'
  */
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: 'vibe-coding-autopilot',
+    title: 'Der Autopilot im Blindflug: Warum „Vibe Coding“ ohne Gehirnschmalz im Graben landet',
+    date: '2026-08-06',
+    coverImage: '/blog/vibe-coding-autopilot.webp',
+    teaser:
+      'Stell dir vor, du gehst in ein Sternerestaurant und rufst nur „Mach mal irgendwas Leckeres, ich hab da so einen guten Vibe!“ – genau so fühlt sich Vibe Coding ohne Leitplanken an.',
+    content: `Stell dir vor, du gehst in ein Sternerestaurant, lehnst dich entspannt zurück, rufst in die Küche: „Mach mal irgendwas Leckeres mit Trüffel und Fisch, ich hab da so einen guten Vibe!“ und wartest, dass ein 5-Gänge-Menü aus der Durchreiche segelt.
+
+Genau so fühlt sich für viele aktuell der Hype um das sogenannte „Vibe Coding“ an. Man tippt ein paar blumige Prompts in Cursor, Claude oder Copilot, lässt die KI eine komplette Web-App aus dem Boden stampfen und fühlt sich wie das Mastermind der digitalen Evolution.
+
+Dass diese romantische Vorstellung in der Realität eher einem Fiebertraum gleicht, merke ich spätestens an den Klassikern, die man sich im Bekanntenkreis und im Büro anhören darf. Die Zynismus-Skala reicht dabei von Ahnungslosigkeit bis Größenwahn:
+
+{{monologue:1. Der Maurer-Kumpel aus der Nachbarschaft|„Ach, du klickst da den ganzen Tag bunte Kästchen und lässt den Computer machen? Hat dieser ‚Entwickler-Beruf‘ eigentlich überhaupt noch Zukunft?“|(Klar, Stefan. Und das nächste Hochhaus zieht sich demnächst auch per Drag & Drop hoch, während du im Liegestuhl Mojitos schlürfst.)}}
+
+{{monologue:2. Der Budget-Sparfuchs (aka der Wunsch-Kunde)|„Puh, das Angebot ist mir ehrlich gesagt etwas zu teuer. Mir hat ChatGPT versprochen, das baut mir ein motivierter Student in der Mittagspause für ne Pizza und zwanzig Euro API-Guthaben.“|(Viel Erfolg beim Debuggen, wenn die KI beim ersten Datenbank-Crash deine gesamte Kundenverwaltung ins digitale Nirvana schießt.)}}
+
+{{monologue:3. Der Marketing-Kollege|„Sag mal, du lehnst dich doch als Entwickler inzwischen den ganzen Tag nur noch zurück und spielst Dirigent für deine kleinen KI-Agenten? Das ist doch keine echte Arbeit mehr!“|(Stimmt. Marketing ist im Grunde ja auch nur dreimal copy-pasten bei ChatGPT und warten, bis das Geld von der Decke regnet.)}}
+
+Hand aufs Herz: Wer sich blind auf den KI-Autopiloten verlässt, füttert genau diese Vorurteile. High-Speed-Tippen ist kein Engineering. Das ist so, als würdest du einen Ferrari-Motor mit Panzertape auf ein Bobbycar schnallen – es fährt, exakt bis zur ersten scharfen Kurve.
+
+Die ungeschönte Wahrheit ist: Die KI ist ein genialer, aber hyperaktiver (häufig zu freundlicher) Praktikant. Sie liefert dir in Rekordzeit Code, aber sie hat keinen blassen Schimmer, ob der Nutzer am Ende tatsächlich ein Problem gelöst bekommt, ob die Website bei Google rankt oder ob du gerade im Eiltempo gegen die {{term:DSGVO}} verstößt.
+
+## Die drei apokalyptischen Reiter des reinen Promptings
+
+Bevor wir uns in die rosarote KI-Zukunft träumen, schauen wir uns an, was passiert, wenn man das Gehirn komplett ausschaltet:
+
+**Das Spaghetti-Syndrom (Cognitive Atrophy):** Wenn du jeden Algorithmus nur noch per Prompt aus der Cloud zauberst, verkümmern deine eigenen analytischen Muskeln. Wenn das System dann einmal kollabiert oder ein fieser Edge Case zuschlägt, stehst du da wie ein Dirigent, dem man den Taktstock weggenommen hat.
+
+**Die Hotel-Lobby der Monotonie (Homogenisierungs-Falle):** KI wird auf dem Durchschnitt des gesamten Internets trainiert. Wenn du unreflektiert promptest, baut sie dir am Ende eine App, die aussieht wie die Rezeption eines generischen Business-Hotels in Frankfurt: austauschbar, steril und mit einer obligatorischen digitalen Yucca-Palme in der Ecke. Keine Seele, keine Marke.
+
+**Der architektonische Jenga-Turm:** Die KI schreibt Code, der jetzt funktioniert. Ob dieser Code in sechs Monaten noch wartbar ist oder beim ersten echten Traffic-Sturm wie ein Kartenhaus zusammenbricht, ist ihr egal. Du züchtest dir im Eiltempo deine eigenen kleinen (oder auch großen) Monster heran.
+
+## So zähme ich das Biest: 7 Werkzeuge statt blinder Glaube
+
+Ich nutze KI täglich – aber nicht, um das Denken einzustellen, sondern um meine Produktivität zu vervielfachen. Der Trick ist, die KI in ein enges, sicheres Korsett zu stecken.
+
+**1. Der Sparringspartner im passenden Maßanzug (Cursor & Modell-Wahl)**
+
+Ich lasse die KI nicht frei im Raum wildern. Das Geniale an modernen Umgebungen wie Cursor ist, dass ich mir nicht blind einen digitalen Alleskönner aufzwingen lasse. Je nach Disziplin wähle ich bewusst das {{term:LLM}} aus, dessen Stärken zum Problem passen: Brauche ich knallharte Architektur-Logik für einen komplexen {{term:Vue}}-State? Ab an den Tisch mit dem analytischen Schwergewicht. Geht es um schnelles Refactoring oder Boilerplate? Dann greife ich zum flinken Sparringspartner.
+
+Zusätzlich zwinge ich das Modell über feste Schemas und projektbezogene Regeln (wie .cursorrules) in einen strengen Korridor aus TypeScript-Standards, {{term:Design Tokens}} und Architektur-Vorgaben.
+
+**2. Der DSGVO-Wachhund (Keine Kundendaten in die Cloud-Dose werfen)**
+
+Wer Analytics-Daten, User-Logs oder Tracking-Metriken auswertet, darf nicht einfach unüberlegt den gesamten Datenschatz in ein x-beliebiges, öffentliches LLM kopieren. Datenschutz ({{term:DSGVO}}) und Compliance sind keine lästigen Alibi-Hürden, sondern die Schutzmauer, die verhindert, dass sensible Nutzerinformationen auf fremden Servern landen. Wenn ich KI zur Analyse von Datenströmen nutze, geschieht das über anonymisierte Datensätze, Enterprise-Schnittstellen mit strikten Garantien oder lokale Open-Source-Modelle (wie via Ollama). Code kann man teilen – die Privatsphäre der Nutzer bleibt tabu.
+
+**3. Der SEO- & Performance-Scanner (Sichtbarkeit und Speed im Check)**
+
+Eine wunderschöne Website bringt rein gar nichts, wenn sie im Google-Nirwana versauert oder lähmend langsam lädt. Ich nutze KI als automatisierten Vorab-Auditor für Web-Projekte: Sie durchleuchtet HTML-Strukturen auf semantische Sauberkeit (entscheidend für den {{term:Search Intent}} und Crawlbarkeit), deckt aufgeblähte DOM-Bäume auf oder hilft beim Feinschliff von Meta-Daten. Aber Achtung: Wer blind auf KI-Keyword-Wüsten vertraut, fliegt im Algorithmus gnadenlos raus. Die KI liefert den harten technischen Checkup – die strategische {{term:SEO}}-Architektur und den echten inhaltlichen Mehrwert schreibst du selbst.
+
+**4. Der Workshop-Katalysator (Personas schärfen statt raten)**
+
+Nach einem interdisziplinären Meeting mit Sales, Support und Produkt hat man meistens einen Berg an unstrukturiertem Feedback.
+
+Hier nutze ich KI als professionellen Sortierer: Ich füttere sie mit echten qualitativen Aussagen und lasse mir helfen, scharfe {{term:Personas}} und messbare {{term:Use Cases}} zu gießen. Das ersetzt keine echte Nutzerforschung, aber es beendet sofort jede zeitraubende Bauchgefühl-Diskussion im Team.
+
+**5. Der Psychologie-Check (Touchpoints & Pain Points)**
+
+Wo springen die Nutzer im Funnel ab? Ich nutze KI, um {{term:Customer Journeys}} zu challengen. Ich konfrontiere psychologische Hürden (kognitive Last, Frustmoment im Checkout) mit technischen Realitäten (Ladezeiten, API-Latenzen), um die echten Reibungspunkte frühzeitig aufzuspüren.
+
+**6. Das Layout-Brecheisen (Prototyping gegen Design-Tunnel)**
+
+Manchmal dreht man sich im Design-Kreis. Statt stundenlang in die falsche Richtung zu optimieren, lasse ich mir in Minuten unterschiedliche Layout-Modelle (Grid vs. Accordion vs. asymmetrischer Split) als Code-Prototypen skizzieren. Das ist kein fertiges {{term:UX}}-Design, aber es sprengt den Tunnelblick sofort auf.
+
+**7. Der Inklusions-Wächter (Barrierefreiheit per Knopfdruck)**
+
+Gutes Design schließt niemanden aus. Wenn ich neue Farbpaletten oder Design Tokens entwerfe, lasse ich sie von KI-Tools sofort gegen {{term:WCAG}}-Standards und Farbfehlsichtigkeiten prüfen. So wandert kein Kontrast-Fehler in die Produktion.
+
+## Das Fazit: Der Pilot sitzt vorne
+
+{{quote:Vibe Coding ohne Leitplanken ist wie Autopilot auf einem Bobbycar – es endet im Straßengraben.}}
+
+Wer glaubt, mit ein paar geschickten Sätzen einen Senior-Engineer, einen UX-Designer oder einen Data-Analysten komplett ersetzen zu können, verwechselt eine gut geschriebene Illusion mit Realität.
+
+Strategisch eingesetzt, ist KI der mächtigste Turbo, den die Tech-Welt je gesehen hat. Aber die Richtung, das Feingefühl für den Menschen vor dem Bildschirm, das Verstehen der nackten Zahlen, der strikte Datenschutz, die SEO-Relevanz und die Verantwortung für das Endprodukt – das machst am Ende alles du.
+
+{{quote:Die KI tippt den Code. Du schreibst die Geschichte.}}`,
+    tags: [
+      'AI & Vibe Coding',
+      'UX-Design',
+      'Data & Engineering',
+      'Accessibility',
+      'SEO & Performance',
+      'Datenschutz',
+    ],
+    readMinutes: 8,
+  },
+  {
     id: 'tableau-vs-custom',
     title: 'Tableau vs. Custom Dashboard: Maßanzug, Stangenware oder der clevere Modulbau?',
     date: '2026-06-14',

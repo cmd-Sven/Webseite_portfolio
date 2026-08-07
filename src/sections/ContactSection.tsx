@@ -1,4 +1,5 @@
 import { Mail } from 'lucide-react'
+import { BlogTermHint } from '../components/BlogTermHint'
 import { PortfolioCard, PortfolioCardSm } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
@@ -11,8 +12,9 @@ export function ContactSection() {
           <div className="w-full md:w-1/2 space-y-6">
             <SectionHeader eyebrow="Get in touch" title="Lass uns über Synergien sprechen." accent="cyan" />
             <p className="text-sm leading-relaxed text-slate-400">
-              Sie suchen einen vielseitigen Teamplayer, der die Lücke zwischen Design, Entwicklung und
-              Business Intelligence schließt? Ich freue mich auf Ihre Einladung zu einem Kennenlerngespräch.
+              Sie suchen einen vielseitigen Teamplayer, der die Lücke zwischen Design, Entwicklung und{' '}
+              <BlogTermHint termKey="Business Intelligence" /> schließt? Ich freue mich auf Ihre Einladung
+              zu einem Kennenlerngespräch.
             </p>
 
             <div className="space-y-3">
