@@ -1,3 +1,4 @@
+// Über mich in Codeform: ehrlicher als LinkedIn, kürzer als das dritte Kaffee-Meeting.
 import type { ReactNode } from 'react'
 import { MapPin, User } from 'lucide-react'
 import { ABOUT_PROFILE } from '../data/about'

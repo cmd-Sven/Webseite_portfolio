@@ -217,7 +217,7 @@
   max-width: 100%;
   object-fit: cover;
   object-position: center 50%;
-  transform: scale(1.32);
+  transform: scale(1.32); /* Ja, absichtlich gezoomt — Filmregie, kein Messfehler */
   transform-origin: center 50%;
   /* Soft-Edge Seiten-Fade — breitere Transparenz-Zonen nach innen */
   -webkit-mask-image: linear-gradient(

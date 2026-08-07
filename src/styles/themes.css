@@ -1,4 +1,6 @@
-/* Darstellungsmodi: dark (Standard), light, contrast (barrierefrei) */
+/* Darstellungsmodi: dark (Standard), light, contrast (barrierefrei).
+   Drei Themes zu pflegen ist wie drei Kaffee-Sorten — alle richtig, aber
+   irgendwer will immer genau die andere. CSS-Variablen: der diplomatische Weg. */
 
 :root,
 [data-appearance='dark'] {

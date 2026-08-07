@@ -1,3 +1,5 @@
+// Persönliches ATS: weil Bewerbungen verdienen mehr als 47 Browser-Tabs und ein Gebet.
+// TODO: Hier irgendwann mal Refactoring machen. (Wird natürlich nie passieren).
 import { supabase } from './supabaseClient'
 import { downloadApplicationIcal } from './atsIcal'
 import { computeSkillMatch, normalizeMasterProfileContent, syncDerivedSkillLists } from './atsMatching'

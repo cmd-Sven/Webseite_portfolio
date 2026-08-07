@@ -4,6 +4,7 @@ import { PortfolioCard, PortfolioCardSm } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
 
+// Wenn du diesen Code liest, hast du entweder zu viel Freizeit oder bist ein sehr gründlicher Recruiter. Respekt!
 export function ContactSection() {
   return (
     <section

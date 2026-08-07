@@ -1,6 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { ArrowUp } from 'lucide-react'
 
+// Zurück nach oben: ehrlichster CTA der Seite. Kein Upsell — nur Schwerkraft rückwärts.
 const DEFAULT_THRESHOLD_PX = 320
 
 function prefersReducedMotion(): boolean {

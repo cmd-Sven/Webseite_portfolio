@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Bundle-Größe ist selten ein Feature — außer hier, wo sie absichtlich das Feature ist.
 import { computed, ref } from 'vue'
 import BlogTermHint from './BlogTermHint.vue'
 

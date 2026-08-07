@@ -1,3 +1,4 @@
+// Projekt-Karten: echte Trade-offs inklusive. Glanz ist CSS — Substanz steckt im Click.
 import { ArrowRight, ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { CASE_STUDIES, getProjectGlowClass, getProjectHeaderGradient } from '../data/caseStudies'

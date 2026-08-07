@@ -1,3 +1,4 @@
+// Login-Gate: kein geheimes Backdoor, nur Credentials. Kaffee hilft trotzdem.
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { DevAdminQuickLogin } from '../../components/DevAdminQuickLogin'

@@ -1,3 +1,4 @@
+// Charts zum Anfassen — Zahlen ohne Beamer-Schweiß und „noch eine Folie“.
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'
 import { SectionHeader } from '../components/SectionHeader'
 import { BlogTermHint } from '../components/BlogTermHint'

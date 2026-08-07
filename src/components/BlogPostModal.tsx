@@ -58,6 +58,7 @@ function renderInline(text: string) {
   })
 }
 
+/** Mini-Markdown-Parser: genug für Blog-Posts, zu wenig für ein Dissertationsthema. */
 function renderContentBlock(block: string, index: number) {
   const trimmed = block.trim()
 

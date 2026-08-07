@@ -8,11 +8,11 @@ export const VuePlayground: React.FC = () => {
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Create a new Vue application instance mounting our Vue component
+    // React-Haus, Vue-Gästezimmer: Island-Mount für die Showcase-Demo.
+    // Zwei Frameworks unter einem Dach — wie Kaffee und Milch, solange niemand umrührt.
     const app = createApp(VueShowcase)
     app.mount(containerRef.current)
 
-    // Unmount Vue app instance on component cleanup
     return () => {
       app.unmount()
     }

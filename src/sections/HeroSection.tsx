@@ -1,3 +1,4 @@
+// Erster Eindruck: ~3 Sekunden. Dieser Kommentar: unbegrenzt. Fair trade.
 import { ArrowRight, FileText, Sparkles } from 'lucide-react'
 import { BlogTeaserSlider } from '../components/BlogTeaserSlider'
 import { BlogTermHint } from '../components/BlogTermHint'

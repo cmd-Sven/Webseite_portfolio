@@ -11,7 +11,7 @@ export function SectionRevealLayer({
   return <div className={`section-reveal-layer ${className}`.trim()}>{children}</div>
 }
 
-/** Direkte Kinder blenden gemeinsam ein (schneller Scroll-Reveal) */
+/** Direkte Kinder blenden gemeinsam ein — Scroll-Reveal ohne Drama (meistens). */
 export function RevealGroup({
   children,
   className = '',

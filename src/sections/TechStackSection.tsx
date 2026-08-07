@@ -1,3 +1,4 @@
+// Logos sammeln ist leicht. Den Stack ernsthaft beherrschen — das ist der eigentliche Commit.
 import { Cpu } from 'lucide-react'
 import { PortfolioCard } from '../components/PortfolioCard'
 import { RevealGroup, SectionRevealLayer } from '../components/SectionReveal'

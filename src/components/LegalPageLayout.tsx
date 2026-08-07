@@ -1,3 +1,4 @@
+// Rechtstexte: der einzige Ort, an dem „muss so“ wirklich stimmt. Augenzwinkern optional.
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'

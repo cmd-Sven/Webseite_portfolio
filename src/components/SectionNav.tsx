@@ -1,3 +1,4 @@
+// Seitenleiste mit Orientierungssinn — weiß meistens, wo du bist. Manchmal besser als wir.
 import { useEffect, useState } from 'react'
 import {
   BarChart3,

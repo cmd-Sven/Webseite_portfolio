@@ -1,3 +1,4 @@
+// Demo-Shell: drei Routen, ein Layout, null Ausreden — Recruiter dürfen gerne klicken.
 import { useEffect, type ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ArrowLeft, Home } from 'lucide-react'

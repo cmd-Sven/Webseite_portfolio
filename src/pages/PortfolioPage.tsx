@@ -467,6 +467,7 @@ function PortfolioPageContent() {
                   }`}
                 >
                   <div className="header-logo-intro__media">
+                    {/* Intro-Video: erster Eindruck in mp4. Wenn es nicht lädt — Plan B ist Stille und Stil. */}
                     <video
                       ref={videoRef}
                       className="header-logo-intro__video"

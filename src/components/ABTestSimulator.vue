@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Variante A: lesen. Variante B: starten. p-Wert: subjektiv hoch — Feature, kein Zufall.
 import { computed, onBeforeUnmount, ref } from 'vue'
 import BlogTermHint from './BlogTermHint.vue'
 

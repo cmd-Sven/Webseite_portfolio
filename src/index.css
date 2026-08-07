@@ -1402,7 +1402,9 @@ body {
   height: 1.05rem;
 }
 
-/* —— Sektions-Reveal beim Scroll —— */
+/* —— Sektions-Reveal beim Scroll ——
+   Früher: Parallax + Stagger + Hoffnung. Heute: opacity + 6px.
+   Weniger Magie, mehr „funktioniert auch am Freitagabend“. */
 .section-reveal-layer {
   transform: none;
 }
@@ -1417,7 +1419,8 @@ body {
   transition-delay: 0s;
 }
 
-/* Verschachtelte RevealGroups nicht selbst ausblenden (kein Opacity-Stacking) */
+/* Verschachtelte RevealGroups nicht selbst ausblenden (kein Opacity-Stacking).
+   CSS-Workaround mit Diplomatie: Eltern bleiben sichtbar, Kinder machen den Fade. */
 .reveal-group > .reveal-group,
 .reveal-group > .reveal-group--grid,
 .reveal-group--grid > .reveal-group,
