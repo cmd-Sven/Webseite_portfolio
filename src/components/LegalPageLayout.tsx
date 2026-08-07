@@ -12,11 +12,14 @@ interface LegalPageLayoutProps {
 
 export function LegalPageLayout({ title, children }: LegalPageLayoutProps) {
   useEffect(() => {
+    const prevTitle = document.title
+    document.title = `${title} | Sven Sieber`
     document.body.style.overflowY = 'auto'
     return () => {
+      document.title = prevTitle
       document.body.style.overflowY = ''
     }
-  }, [])
+  }, [title])
 
   return (
     <div className="legal-page min-h-screen bg-slate-950 text-slate-100 font-sans overflow-y-auto">

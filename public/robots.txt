@@ -3,5 +3,7 @@ Allow: /
 
 Disallow: /admin
 Disallow: /admin/
+Disallow: /monitor
+Disallow: /monitor/
 
 Sitemap: https://portfolio-sven-sieber.vercel.app/sitemap.xml

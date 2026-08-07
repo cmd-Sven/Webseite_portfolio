@@ -11,7 +11,7 @@ export function SectionRevealLayer({
   return <div className={`section-reveal-layer ${className}`.trim()}>{children}</div>
 }
 
-/** Direkte Kinder blenden nacheinander ein (gestaffelt) */
+/** Direkte Kinder blenden gemeinsam ein (schneller Scroll-Reveal) */
 export function RevealGroup({
   children,
   className = '',
@@ -19,7 +19,7 @@ export function RevealGroup({
 }: {
   children: ReactNode
   className?: string
-  /** Stagger für Grid-/Card-Kinder */
+  /** Grid-Layout-Variante (kein Stagger mehr) */
   grid?: boolean
 }) {
   return (

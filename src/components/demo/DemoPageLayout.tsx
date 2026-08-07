@@ -34,6 +34,9 @@ export function DemoPageLayout({
   children,
 }: DemoPageLayoutProps) {
   useEffect(() => {
+    const prevTitle = document.title
+    document.title = `${title} | Sven Sieber`
+
     const { body, documentElement } = document
     const prevBodyOverflow = body.style.overflow
     const prevHtmlOverflow = documentElement.style.overflow
@@ -42,10 +45,11 @@ export function DemoPageLayout({
     documentElement.style.overflow = 'auto'
 
     return () => {
+      document.title = prevTitle
       body.style.overflow = prevBodyOverflow
       documentElement.style.overflow = prevHtmlOverflow
     }
-  }, [])
+  }, [title])
 
   return (
     <div className="demo-page analytics-page min-h-screen bg-slate-950 text-slate-100 font-sans overflow-y-auto">

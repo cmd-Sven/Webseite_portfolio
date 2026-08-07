@@ -130,9 +130,8 @@ function PortfolioPageContent() {
       const scrollTop = container.scrollTop
       const viewH = container.clientHeight
       const viewportBottom = scrollTop + viewH
-      // Früher Reveal: ~15% unter dem Fold (entspricht rootMargin bottom positiv)
-      const enterLine = viewportBottom + viewH * 0.15
-      const exitLine = scrollTop - viewH * 0.05
+      // Sehr früher Reveal: ~50% Viewport unter dem Fold — Animation fertig bevor Inhalt im Blick ist
+      const enterLine = viewportBottom + viewH * 0.5
       const probe = scrollTop + viewH * 0.3
 
       let activeId = 'hero'
@@ -142,11 +141,13 @@ function PortfolioPageContent() {
         const top = sec.offsetTop
         const bottom = top + sec.offsetHeight
 
-        // Hero / above-the-fold sofort; übrige Sektionen schon vor dem Eintritt
-        if (sec.id === 'hero' || (top < enterLine && bottom > exitLine)) {
+        // Hero / above-the-fold sofort; einmal sichtbar → bleibt sichtbar (kein Re-Hide)
+        if (
+          sec.id === 'hero' ||
+          top < enterLine ||
+          (top < viewportBottom && bottom > scrollTop)
+        ) {
           sec.classList.add('section-in-view')
-        } else if (bottom < exitLine || top > enterLine) {
-          sec.classList.remove('section-in-view')
         }
 
         if (probe >= top && probe < bottom) {
