@@ -6,10 +6,12 @@ import { updateJobPoolEntry } from './atsPoolApi'
 import type {
   AnalyzeJobPostingRequest,
   AnalyzeJobPostingResponse,
+  ApplicationAttachmentRow,
   ApplicationRow,
   ApplicationStatus,
   GenerateApplicationDocsRequest,
   GenerateApplicationDocsResponse,
+  JobPoolRow,
   MasterProfileAssetKind,
   MasterProfileContent,
   MasterProfileRow,
@@ -18,11 +20,14 @@ import type {
   RewriteCoverBlockResponse,
 } from '../types/ats'
 import {
+  ATS_DOCUMENTS_STORAGE_BUCKET,
   EMPTY_MASTER_PROFILE_CONTENT,
   MASTER_PROFILE_STORAGE_BUCKET,
   PORTFOLIO_PUBLIC_CV_OBJECT,
   PORTFOLIO_PUBLIC_STORAGE_BUCKET,
+  atsApplicationAttachmentPath,
 } from '../types/ats'
+import { linkApplicationToPool } from './atsPoolApi'
 
 async function invokeErrorMessage(error: {
   message?: string
@@ -109,7 +114,7 @@ export async function createApplication(
     .single()
 
   if (error) return { data: null, error: error.message }
-  return { data: data as ApplicationRow, error: null }
+  return { data: normalizeApplicationRow(data as ApplicationRow), error: null }
 }
 
 export async function generateApplicationDocs(
@@ -161,15 +166,16 @@ export async function getApplicationById(
 
   if (error) return { data: null, error: error.message }
   if (!data) return { data: null, error: null }
-  const row = data as ApplicationRow
+  return { data: normalizeApplicationRow(data as ApplicationRow), error: null }
+}
+
+function normalizeApplicationRow(row: ApplicationRow): ApplicationRow {
   return {
-    data: {
-      ...row,
-      feedback_notes: row.feedback_notes ?? null,
-      feedback_at: row.feedback_at ?? null,
-      applied_at: row.applied_at ?? null,
-    },
-    error: null,
+    ...row,
+    feedback_notes: row.feedback_notes ?? null,
+    feedback_at: row.feedback_at ?? null,
+    applied_at: row.applied_at ?? null,
+    sent_manually: Boolean(row.sent_manually),
   }
 }
 
@@ -184,12 +190,7 @@ export async function listApplications(): Promise<{
 
   if (error) return { data: [], error: error.message }
   return {
-    data: ((data as ApplicationRow[]) ?? []).map((row) => ({
-      ...row,
-      feedback_notes: row.feedback_notes ?? null,
-      feedback_at: row.feedback_at ?? null,
-      applied_at: row.applied_at ?? null,
-    })),
+    data: ((data as ApplicationRow[]) ?? []).map(normalizeApplicationRow),
     error: null,
   }
 }
@@ -199,6 +200,7 @@ export type ApplicationUpdatePatch = Partial<
     ApplicationRow,
     | 'status'
     | 'applied_at'
+    | 'sent_manually'
     | 'feedback_notes'
     | 'feedback_at'
     | 'match_score'
@@ -221,7 +223,10 @@ export async function updateApplication(
     .maybeSingle()
 
   if (error) return { data: null, error: error.message }
-  return { data: data as ApplicationRow | null, error: null }
+  return {
+    data: data ? normalizeApplicationRow(data as ApplicationRow) : null,
+    error: null,
+  }
 }
 
 /**
@@ -247,14 +252,26 @@ async function syncPoolAndSlotAfterApplied(applicationId: string): Promise<void>
 /**
  * Setzt Status auf „Beworben“, aktualisiert applied_at und lädt die .ics-Datei herunter
  * (Absende + Follow-up nach 14 Tagen). Synchronisiert Pool/Plan-Slot falls verknüpft.
+ * Unabhängig von KI-generierten Dokumenten.
  */
 export async function markAppliedAndDownloadCalendar(
   application: ApplicationRow,
+  options?: {
+    /** ISO-Zeitstempel oder YYYY-MM-DD — Default: jetzt */
+    appliedAt?: string
+    /** Markiert als manuell versendet */
+    sentManually?: boolean
+    /** .ics-Download überspringen */
+    skipCalendarDownload?: boolean
+  },
 ): Promise<{ data: ApplicationRow | null; filename: string | null; error: string | null }> {
-  const appliedAt = new Date().toISOString()
+  const appliedAt = resolveAppliedAtIso(options?.appliedAt)
   const patch: ApplicationUpdatePatch = {
     status: 'Beworben' satisfies ApplicationStatus,
     applied_at: appliedAt,
+  }
+  if (options?.sentManually) {
+    patch.sent_manually = true
   }
 
   const { data, error } = await updateApplication(application.id, patch)
@@ -263,6 +280,10 @@ export async function markAppliedAndDownloadCalendar(
   }
 
   await syncPoolAndSlotAfterApplied(data.id)
+
+  if (options?.skipCalendarDownload) {
+    return { data, filename: null, error: null }
+  }
 
   const { filename, error: icalError } = downloadApplicationIcal({
     id: data.id,
@@ -276,6 +297,225 @@ export async function markAppliedAndDownloadCalendar(
   }
 
   return { data, filename, error: null }
+}
+
+/** YYYY-MM-DD oder ISO → ISO; ungültig → jetzt. */
+function resolveAppliedAtIso(value?: string): string {
+  if (!value?.trim()) return new Date().toISOString()
+  const raw = value.trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const local = new Date(`${raw}T12:00:00`)
+    if (!Number.isNaN(local.getTime())) return local.toISOString()
+  }
+  const parsed = new Date(raw)
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString()
+  return new Date().toISOString()
+}
+
+const ATTACHMENT_ALLOWED_MIME = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'text/plain',
+])
+
+function guessMimeFromName(fileName: string): string | null {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  if (ext === 'pdf') return 'application/pdf'
+  if (ext === 'doc') return 'application/msword'
+  if (ext === 'docx') {
+    return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  }
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg'
+  if (ext === 'png') return 'image/png'
+  if (ext === 'webp') return 'image/webp'
+  if (ext === 'txt') return 'text/plain'
+  return null
+}
+
+export async function listApplicationAttachments(
+  applicationId: string,
+): Promise<{ data: ApplicationAttachmentRow[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('application_attachments')
+    .select('*')
+    .eq('application_id', applicationId)
+    .order('created_at', { ascending: true })
+
+  if (error) return { data: [], error: error.message }
+  return { data: (data as ApplicationAttachmentRow[]) ?? [], error: null }
+}
+
+export async function uploadApplicationAttachment(
+  userId: string,
+  applicationId: string,
+  file: File,
+  label?: string | null,
+): Promise<{ data: ApplicationAttachmentRow | null; error: string | null }> {
+  const mime = file.type || guessMimeFromName(file.name) || 'application/octet-stream'
+  if (file.type && !ATTACHMENT_ALLOWED_MIME.has(file.type)) {
+    const guessed = guessMimeFromName(file.name)
+    if (!guessed || !ATTACHMENT_ALLOWED_MIME.has(guessed)) {
+      return {
+        data: null,
+        error: 'Dateityp nicht erlaubt (PDF, DOC/DOCX, JPG/PNG/WebP, TXT)',
+      }
+    }
+  }
+
+  const path = atsApplicationAttachmentPath(userId, applicationId, file.name)
+  const contentType = ATTACHMENT_ALLOWED_MIME.has(mime)
+    ? mime
+    : guessMimeFromName(file.name) || 'application/pdf'
+
+  const { error: uploadError } = await supabase.storage
+    .from(ATS_DOCUMENTS_STORAGE_BUCKET)
+    .upload(path, file, {
+      upsert: false,
+      contentType,
+      cacheControl: '3600',
+    })
+
+  if (uploadError) return { data: null, error: uploadError.message }
+
+  const { data, error } = await supabase
+    .from('application_attachments')
+    .insert({
+      application_id: applicationId,
+      user_id: userId,
+      storage_path: path,
+      file_name: file.name,
+      mime_type: contentType,
+      label: label?.trim() || null,
+    })
+    .select('*')
+    .single()
+
+  if (error) {
+    await supabase.storage.from(ATS_DOCUMENTS_STORAGE_BUCKET).remove([path])
+    return { data: null, error: error.message }
+  }
+
+  return { data: data as ApplicationAttachmentRow, error: null }
+}
+
+export async function removeApplicationAttachment(
+  attachment: ApplicationAttachmentRow,
+): Promise<{ error: string | null }> {
+  const { error: storageError } = await supabase.storage
+    .from(ATS_DOCUMENTS_STORAGE_BUCKET)
+    .remove([attachment.storage_path])
+
+  const { error } = await supabase
+    .from('application_attachments')
+    .delete()
+    .eq('id', attachment.id)
+
+  if (error) return { error: error.message }
+  if (storageError) return { error: storageError.message }
+  return { error: null }
+}
+
+export async function getApplicationAttachmentUrl(
+  path: string | null | undefined,
+): Promise<{ url: string | null; error: string | null }> {
+  if (!path?.trim()) return { url: null, error: null }
+  const { data, error } = await supabase.storage
+    .from(ATS_DOCUMENTS_STORAGE_BUCKET)
+    .createSignedUrl(path, 60 * 60)
+  if (error) return { url: null, error: error.message }
+  return { url: data.signedUrl, error: null }
+}
+
+/**
+ * Manuell versendet: Status Beworben + applied_at + optional Uploads + .ics Follow-up.
+ * Keine KI-Dokumente nötig.
+ */
+export async function markManuallySent(
+  application: ApplicationRow,
+  input: {
+    userId: string
+    /** YYYY-MM-DD oder ISO — Default heute */
+    sentAt?: string
+    files?: File[]
+  },
+): Promise<{
+  data: ApplicationRow | null
+  filename: string | null
+  uploaded: number
+  error: string | null
+}> {
+  const files = input.files ?? []
+  let uploaded = 0
+
+  for (const file of files) {
+    const { error: uploadError } = await uploadApplicationAttachment(
+      input.userId,
+      application.id,
+      file,
+    )
+    if (uploadError) {
+      return {
+        data: null,
+        filename: null,
+        uploaded,
+        error: `Upload „${file.name}“ fehlgeschlagen: ${uploadError}`,
+      }
+    }
+    uploaded += 1
+  }
+
+  const { data, filename, error } = await markAppliedAndDownloadCalendar(application, {
+    appliedAt: input.sentAt,
+    sentManually: true,
+  })
+
+  return { data, filename, uploaded, error }
+}
+
+/**
+ * Stellt sicher, dass ein Pool-Eintrag eine Bewerbung hat (ohne KI).
+ * Legt ggf. eine Minimal-Bewerbung an und verknüpft sie.
+ */
+export async function ensureApplicationForPool(
+  pool: JobPoolRow,
+  userId: string,
+): Promise<{ data: ApplicationRow | null; error: string | null }> {
+  if (pool.application_id) {
+    return getApplicationById(pool.application_id)
+  }
+
+  const jobTitle =
+    pool.title?.trim() ||
+    (pool.application_type === 'initiative' ? 'Initiativbewerbung' : 'Stelle')
+  const description =
+    pool.job_description?.trim() ||
+    pool.company_info?.trim() ||
+    pool.target_notes?.trim() ||
+    pool.notes?.trim() ||
+    pool.source_url?.trim() ||
+    `Manuell versendet: ${pool.company_name}`
+
+  const { data: created, error: createError } = await createApplication({
+    company_name: pool.company_name,
+    job_title: jobTitle,
+    job_description_raw: description,
+    status: 'In Bearbeitung',
+  })
+
+  if (createError || !created) {
+    return { data: null, error: createError || 'Bewerbung konnte nicht angelegt werden' }
+  }
+
+  const { error: linkError } = await linkApplicationToPool(pool.id, created.id, 'in_arbeit')
+  if (linkError) {
+    return { data: created, error: `Bewerbung angelegt, Pool-Verknüpfung fehlgeschlagen: ${linkError}` }
+  }
+
+  return { data: created, error: null }
 }
 
 /** Speichert Rückmeldung und optional Status (Interview / Absage). */

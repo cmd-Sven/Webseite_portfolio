@@ -4,21 +4,27 @@ import {
   ArrowLeft,
   CalendarPlus,
   Download,
+  ExternalLink,
   Loader2,
   Mail,
+  Paperclip,
   RefreshCw,
   Save,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { CoverLetterBlockEditor } from '../../components/admin/CoverLetterBlockEditor'
 import { CvDataEditor } from '../../components/admin/CvDataEditor'
+import { ManualSentDialog } from '../../components/admin/ManualSentDialog'
 import { useAuth } from '../../context/AuthContext'
 import {
   computeAndPersistMatch,
   generateApplicationDocs,
+  getApplicationAttachmentUrl,
   getApplicationById,
   getMasterProfile,
-  markAppliedAndDownloadCalendar,
+  listApplicationAttachments,
+  removeApplicationAttachment,
   saveApplicationFeedback,
   updateApplication,
 } from '../../lib/atsApi'
@@ -32,6 +38,7 @@ import {
 } from '../../lib/coverLetterBlocks'
 import { computeSkillMatch } from '../../lib/atsMatching'
 import type {
+  ApplicationAttachmentRow,
   ApplicationRow,
   ApplicationStatus,
   GeneratedCvData,
@@ -198,12 +205,25 @@ export function AdminApplicationDetailPage() {
   const [docsSuccess, setDocsSuccess] = useState<string | null>(null)
   const [exportingPdfMode, setExportingPdfMode] = useState<PdfExportMode | null>(null)
   const [statusSaving, setStatusSaving] = useState(false)
-  const [markingApplied, setMarkingApplied] = useState(false)
+  const [manualSentOpen, setManualSentOpen] = useState(false)
+  const [attachments, setAttachments] = useState<ApplicationAttachmentRow[]>([])
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false)
   const [feedbackNotes, setFeedbackNotes] = useState('')
   const [feedbackStatus, setFeedbackStatus] = useState<
     '' | 'Interview' | 'Absage' | 'Beworben'
   >('')
   const [savingFeedback, setSavingFeedback] = useState(false)
+
+  async function refreshAttachments(applicationId: string) {
+    setAttachmentsLoading(true)
+    const { data, error: listError } = await listApplicationAttachments(applicationId)
+    setAttachmentsLoading(false)
+    if (listError) {
+      setDocsError(listError)
+      return
+    }
+    setAttachments(data)
+  }
 
   useEffect(() => {
     if (!id) {
@@ -261,6 +281,7 @@ export function AdminApplicationDetailPage() {
       setFeedbackNotes(nextApp.feedback_notes ?? '')
       if (persistError) setMatchError(persistError)
       setLoading(false)
+      void refreshAttachments(nextApp.id)
     })()
 
     return () => {
@@ -420,29 +441,6 @@ export function AdminApplicationDetailPage() {
     setApplication(data)
   }
 
-  async function handleMarkAppliedAndDownloadIcal() {
-    if (!application) return
-    setMarkingApplied(true)
-    setDocsError(null)
-    setDocsSuccess(null)
-
-    const { data, filename, error: markError } = await markAppliedAndDownloadCalendar(application)
-    setMarkingApplied(false)
-
-    if (markError || !data) {
-      setDocsError(markError || 'Aktion fehlgeschlagen')
-      if (data) setApplication(data)
-      return
-    }
-
-    setApplication(data)
-    setDocsSuccess(
-      filename
-        ? `Als beworben markiert — Kalenderdatei „${filename}“ heruntergeladen.`
-        : 'Als beworben markiert — Kalenderdatei heruntergeladen.',
-    )
-  }
-
   function handlePrepareEmail() {
     if (!application) return
     setDocsError(null)
@@ -544,7 +542,7 @@ export function AdminApplicationDetailPage() {
             Status
             <select
               value={application.status}
-              disabled={statusSaving || markingApplied}
+              disabled={statusSaving}
               onChange={(e) =>
                 void handleStatusChange(e.target.value as ApplicationStatus)
               }
@@ -563,34 +561,36 @@ export function AdminApplicationDetailPage() {
       <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1 min-w-0">
-            <h3 className="text-sm font-medium text-zinc-900">Bewerbung &amp; Kalender</h3>
+            <h3 className="text-sm font-medium text-zinc-900">Manuell versendet</h3>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              Status auf „Beworben“ setzen und zwei Apple-Kalender-Termine (.ics) herunterladen —
-              Absendedatum und Follow-up nach 14 Tagen.
+              Bewerbung wurde manuell verschickt — ohne KI-Dokumente. Optional Unterlagen
+              hochladen. Speichert Versanddatum und lädt .ics (Absende + Follow-up nach 14
+              Tagen).
             </p>
             {application.applied_at && (
               <p className="text-xs text-zinc-400">
-                Beworben am{' '}
+                Versendet am{' '}
                 {new Date(application.applied_at).toLocaleString('de-DE', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 })}
+                {application.sent_manually ? ' · manuell' : ''}
+                {' · Follow-up '}
+                {new Date(
+                  new Date(application.applied_at).getTime() + 14 * 24 * 60 * 60 * 1000,
+                ).toLocaleDateString('de-DE', { dateStyle: 'medium' })}
               </p>
             )}
           </div>
           <div className="flex flex-col sm:items-end gap-2 shrink-0">
             <button
               type="button"
-              disabled={markingApplied || statusSaving}
-              onClick={() => void handleMarkAppliedAndDownloadIcal()}
-              className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-3.5 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-60 transition-colors"
+              disabled={statusSaving || !user?.id}
+              onClick={() => setManualSentOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-3.5 py-2 text-sm text-white hover:bg-emerald-800 disabled:opacity-60 transition-colors"
             >
-              {markingApplied ? (
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-              ) : (
-                <CalendarPlus className="w-4 h-4" aria-hidden />
-              )}
-              Als beworben markieren &amp; .ics
+              <CalendarPlus className="w-4 h-4" aria-hidden />
+              Manuell versendet
             </button>
             <button
               type="button"
@@ -603,6 +603,70 @@ export function AdminApplicationDetailPage() {
             </button>
           </div>
         </div>
+
+        <div className="space-y-2 border-t border-zinc-100 pt-3">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-600">
+            <Paperclip className="w-3.5 h-3.5" aria-hidden />
+            Hochgeladene Unterlagen
+            {attachmentsLoading && (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" aria-hidden />
+            )}
+          </div>
+          {attachments.length === 0 ? (
+            <p className="text-xs text-zinc-400">Noch keine Dateien — optional beim Markieren.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {attachments.map((att) => (
+                <li
+                  key={att.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-100 bg-zinc-50 px-2.5 py-1.5 text-xs text-zinc-700"
+                >
+                  <span className="truncate min-w-0">{att.file_name}</span>
+                  <span className="inline-flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-zinc-600 hover:bg-white hover:text-zinc-900"
+                      onClick={() => {
+                        void (async () => {
+                          const { url, error: urlError } = await getApplicationAttachmentUrl(
+                            att.storage_path,
+                          )
+                          if (urlError || !url) {
+                            setDocsError(urlError || 'Download-Link fehlgeschlagen')
+                            return
+                          }
+                          window.open(url, '_blank', 'noopener,noreferrer')
+                        })()
+                      }}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                      Öffnen
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-red-600 hover:bg-white"
+                      onClick={() => {
+                        void (async () => {
+                          const { error: delError } = await removeApplicationAttachment(att)
+                          if (delError) {
+                            setDocsError(delError)
+                            return
+                          }
+                          setAttachments((prev) => prev.filter((a) => a.id !== att.id))
+                          setDocsSuccess(`„${att.file_name}“ entfernt.`)
+                        })()
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden />
+                      Löschen
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {(docsError || docsSuccess) && (
           <div
             role={docsError ? 'alert' : 'status'}
@@ -617,6 +681,28 @@ export function AdminApplicationDetailPage() {
           </div>
         )}
       </section>
+
+      {user?.id && (
+        <ManualSentDialog
+          open={manualSentOpen}
+          application={application}
+          userId={user.id}
+          onClose={() => setManualSentOpen(false)}
+          onError={(message) => {
+            setDocsError(message)
+            setDocsSuccess(null)
+          }}
+          onDone={({ application: next, filename, uploaded }) => {
+            setApplication(next)
+            void refreshAttachments(next.id)
+            const parts = ['Als manuell versendet markiert']
+            if (uploaded > 0) parts.push(`${uploaded} Datei(en) hochgeladen`)
+            if (filename) parts.push(`.ics „${filename}“ (Absende + Follow-up +14 Tage)`)
+            setDocsSuccess(parts.join(' — ') + '.')
+            setDocsError(null)
+          }}
+        />
+      )}
 
       <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm space-y-4">
         <div className="space-y-1">

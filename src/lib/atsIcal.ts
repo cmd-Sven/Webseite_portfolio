@@ -71,6 +71,8 @@ function vevent(params: {
   summary: string
   description?: string
   allDay?: boolean
+  /** Optional DISPLAY alarm, e.g. `-P1D` = 1 Tag vorher */
+  alarmTrigger?: string
 }): string {
   const dtstartLine = params.allDay
     ? `DTSTART;VALUE=DATE:${params.dtstart}`
@@ -84,6 +86,15 @@ function vevent(params: {
   ]
   if (params.description) {
     lines.push(`DESCRIPTION:${escapeIcalText(params.description)}`)
+  }
+  if (params.alarmTrigger) {
+    lines.push(
+      'BEGIN:VALARM',
+      `TRIGGER:${params.alarmTrigger}`,
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${escapeIcalText(params.summary)}`,
+      'END:VALARM',
+    )
   }
   lines.push('END:VEVENT')
   return lines.map(foldIcalLine).join('\r\n')
@@ -208,6 +219,7 @@ export function buildApplicationIcal(input: ApplicationIcalInput): string {
     description: description
       ? `Nachfassen zur Bewerbung „${jobTitle}“.\n${description}`
       : `Nachfassen zur Bewerbung „${jobTitle}“.`,
+    alarmTrigger: '-P1D',
   })
 
   return [

@@ -180,8 +180,10 @@ export type ApplicationRow = {
   job_title: string
   job_description_raw: string
   status: ApplicationStatus
-  /** Zeitpunkt der Bewerbung (gesetzt beim Status „Beworben“) */
+  /** Versanddatum (gesetzt beim Status „Beworben“ / manuell versendet) */
   applied_at: string | null
+  /** True = manuell versendet (ohne Pflicht auf KI-Dokumente) */
+  sent_manually: boolean
   /** Manuell erfasste Rückmeldung (z. B. aus E-Mail). */
   feedback_notes: string | null
   /** Zeitpunkt der Rückmeldungs-Erfassung. */
@@ -191,6 +193,34 @@ export type ApplicationRow = {
   generated_cover_letter: string | null
   generated_cv_data: GeneratedCvData | null
   created_at: string
+}
+
+/** Hochgeladene Unterlage zu einer Bewerbung (Bucket ats-documents). */
+export type ApplicationAttachmentRow = {
+  id: string
+  application_id: string
+  user_id: string
+  storage_path: string
+  file_name: string
+  mime_type: string | null
+  label: string | null
+  created_at: string
+}
+
+/** Hilfsfunktion für Attachment-Pfad-Konvention (Client-seitig). */
+export function atsApplicationAttachmentPath(
+  userId: string,
+  applicationId: string,
+  fileName: string,
+): string {
+  const safe = fileName
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  return `${userId}/applications/${applicationId}/${stamp}-${safe || 'datei'}`
 }
 
 export type MatchItemStatus = 'matched' | 'partial' | 'missing'

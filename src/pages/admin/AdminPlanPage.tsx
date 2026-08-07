@@ -15,10 +15,11 @@ import {
   Sunrise,
   Sunset,
 } from 'lucide-react'
+import { ManualSentDialog } from '../../components/admin/ManualSentDialog'
 import { useAuth } from '../../context/AuthContext'
 import {
+  ensureApplicationForPool,
   getApplicationById,
-  markAppliedAndDownloadCalendar,
 } from '../../lib/atsApi'
 import { downloadPlanBatchIcal } from '../../lib/atsIcal'
 import { openApplicationMailto } from '../../lib/atsMail'
@@ -36,7 +37,7 @@ import {
   type PlanSlotWithPool,
 } from '../../lib/atsPlanApi'
 import { updateJobPoolEntry } from '../../lib/atsPoolApi'
-import type { JobPoolApplicationType, JobPoolRow } from '../../types/ats'
+import type { ApplicationRow, JobPoolApplicationType, JobPoolRow } from '../../types/ats'
 
 const TYPE_LABEL: Record<JobPoolApplicationType, string> = {
   regular: 'Regulär',
@@ -138,6 +139,7 @@ export function AdminPlanPage() {
   const [reschedulingId, setReschedulingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [manualSentApp, setManualSentApp] = useState<ApplicationRow | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -327,9 +329,9 @@ export function AdminPlanPage() {
     navigate(`/admin/applications/${applicationId}`)
   }
 
-  async function handleMarkSent(pool: JobPoolRow) {
-    if (!pool.application_id) {
-      setError('Zuerst Bewerbung anlegen und Dokumente generieren.')
+  async function handleOpenManualSent(pool: JobPoolRow) {
+    if (!user?.id) {
+      setError('Nicht angemeldet')
       return
     }
 
@@ -337,32 +339,20 @@ export function AdminPlanPage() {
     setError(null)
     setNotice(null)
 
-    const { data: app, error: loadError } = await getApplicationById(pool.application_id)
-    if (loadError || !app) {
-      setBusyAction(false)
-      setError(loadError || 'Bewerbung nicht gefunden')
-      return
-    }
-
-    const { data, filename, error: markError } = await markAppliedAndDownloadCalendar(app)
+    const { data: app, error: ensureError } = await ensureApplicationForPool(pool, user.id)
     setBusyAction(false)
 
-    if (markError || !data) {
-      setError(markError || 'Markieren fehlgeschlagen')
+    if (ensureError || !app) {
+      setError(ensureError || 'Bewerbung konnte nicht vorbereitet werden')
       return
     }
 
-    setNotice(
-      filename
-        ? `Als verschickt markiert — Follow-up-.ics „${filename}“ (Absende + 14 Tage).`
-        : 'Als verschickt markiert.',
-    )
-    await load()
+    setManualSentApp(app)
   }
 
   async function handleMailto(pool: JobPoolRow) {
     if (!pool.application_id) {
-      setError('Zuerst Bewerbung anlegen.')
+      setError('Zuerst Bewerbung anlegen (oder „Manuell versendet“ nutzen).')
       return
     }
     setBusyAction(true)
@@ -529,12 +519,13 @@ export function AdminPlanPage() {
 
                     <button
                       type="button"
-                      disabled={busyAction || !focusPool.application_id}
-                      onClick={() => void handleMarkSent(focusPool)}
+                      disabled={busyAction || !user?.id}
+                      onClick={() => void handleOpenManualSent(focusPool)}
                       className="inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100 disabled:opacity-50"
+                      title="Ohne KI-Dokumente — Versanddatum + optionale Uploads + Follow-up-.ics"
                     >
                       <CheckCircle2 className="w-4 h-4" aria-hidden />
-                      Als verschickt markieren
+                      Manuell versendet
                     </button>
                   </div>
 
@@ -875,6 +866,27 @@ export function AdminPlanPage() {
           </button>
         )}
       </section>
+
+      {user?.id && manualSentApp && (
+        <ManualSentDialog
+          open
+          application={manualSentApp}
+          userId={user.id}
+          onClose={() => setManualSentApp(null)}
+          onError={(message) => {
+            setError(message)
+            setNotice(null)
+          }}
+          onDone={({ filename, uploaded }) => {
+            const parts = ['Als manuell versendet markiert']
+            if (uploaded > 0) parts.push(`${uploaded} Datei(en) hochgeladen`)
+            if (filename) parts.push(`Follow-up-.ics „${filename}“ (Absende + 14 Tage)`)
+            setNotice(parts.join(' — ') + '.')
+            setManualSentApp(null)
+            void load()
+          }}
+        />
+      )}
     </div>
   )
 }
