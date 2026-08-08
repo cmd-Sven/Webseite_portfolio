@@ -194,7 +194,7 @@ export function MonitorPoolEditor({
             <a
               href={form.source_url}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex"
               onClick={(e) => e.stopPropagation()}
             >

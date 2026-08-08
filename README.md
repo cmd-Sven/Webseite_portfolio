@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# Portfolio — Sven Sieber
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Öffentliches Portfolio von **Sven Sieber** (UX/UI, Dashboards, Frontend, interaktive Demos).
 
-Currently, two official plugins are available:
+**Live:** [https://portfolio-sven-sieber.vercel.app](https://portfolio-sven-sieber.vercel.app)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech-Stack
 
-## React Compiler
+- [Vite](https://vitejs.dev/) + [React](https://react.dev/) + TypeScript
+- [React Router](https://reactrouter.com/)
+- [Tailwind CSS](https://tailwindcss.com/) / DaisyUI
+- [Supabase](https://supabase.com/) (Auth, Datenbank, Edge Functions)
+- Deploy auf [Vercel](https://vercel.com/)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Lokal starten
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env.local   # Werte lokal setzen — nie committen
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Benötigte Umgebungsvariablen (Namen, keine Werte): siehe `.env.example`, u. a.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- weitere optionale `VITE_*`- und Server-Variablen je nach Feature
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Keine echten Secrets, Passwörter oder API-Keys in dieses Repo, in Issues oder in die README schreiben.
+
+## Code & Umgebung schützen
+
+Hier läuft eine **aktive Produktiv-Umgebung**. Bitte:
+
+- **Keine Secrets committen** — `.env.local` und ähnliche Dateien bleiben privat und stehen in `.gitignore`
+- **Keine Credentials** (Passwörter, Tokens, Login-Daten) in README, Issues, PRs oder Chat-Logs
+- Repo-Sichtbarkeit und Deploy-Protection (z. B. Vercel) bei Bedarf einschränken; Zugangsdaten nur über den jeweiligen Provider verwalten
+- Für lokale Entwicklung nur eigene Platzhalter-/Testwerte in `.env.local` verwenden
+
+## Lizenz / Nutzung
+
+Persönliches Portfolio-Projekt. Code und Inhalte gehören Sven Sieber, sofern nicht anders gekennzeichnet.

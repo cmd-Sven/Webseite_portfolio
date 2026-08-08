@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { PortfolioPage } from './pages/PortfolioPage'
 import { AtsBookmarkletReceiver } from './components/admin/AtsBookmarkletReceiver'
+import { AtsCompanyBookmarkletReceiver } from './components/admin/AtsCompanyBookmarkletReceiver'
 import { AtsPoolBookmarkletReceiver } from './components/admin/AtsPoolBookmarkletReceiver'
 import { ProtectedRoute } from './components/admin/ProtectedRoute'
 
@@ -102,6 +103,7 @@ export function App() {
     <>
       <AtsBookmarkletReceiver />
       <AtsPoolBookmarkletReceiver />
+      <AtsCompanyBookmarkletReceiver />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<PortfolioPage />} />

@@ -34,6 +34,17 @@ import {
   resolveAdminPoolOwnerId,
 } from '../../lib/atsMonitorApi'
 import {
+  ATS_COMPANY_BOOKMARKLET_EVENT,
+  buildCompanyBookmarkletHref,
+  claimCompanyBookmarkletPayload,
+  consumeCompanyBookmarkletHash,
+  loadCompanyBookmarkletPayload,
+  readCompanyBookmarkletFromClipboard,
+  resolveCompanyImportFields,
+  saveCompanyBookmarkletPayload,
+  type AtsCompanyBookmarkletPayload,
+} from '../../lib/atsCompanyBookmarklet'
+import {
   ATS_POOL_BOOKMARKLET_EVENT,
   buildPoolBookmarkletHref,
   claimPoolBookmarkletPayload,
@@ -79,6 +90,14 @@ function truncate(text: string | null | undefined, max = 160): string {
   const t = (text ?? '').trim()
   if (!t) return ''
   return t.length > max ? `${t.slice(0, max - 1)}…` : t
+}
+
+/** Öffentliche Stellen-URL: source_url, sonst erster Eintrag in links. */
+function resolveJobSourceUrl(item: JobPoolRow): string | null {
+  const fromSource = item.source_url?.trim()
+  if (fromSource) return fromSource
+  const fromLinks = item.links?.find((l) => l.url?.trim())?.url?.trim()
+  return fromLinks || null
 }
 
 function resolvePoolImportFields(payload: AtsPoolBookmarkletPayload): {
@@ -134,11 +153,15 @@ export function MonitorPage() {
   const [importing, setImporting] = useState(false)
   const [bookmarkletHref, setBookmarkletHref] = useState('')
   const [bookmarkletCopied, setBookmarkletCopied] = useState(false)
+  const [companyBookmarkletHref, setCompanyBookmarkletHref] = useState('')
+  const [companyBookmarkletCopied, setCompanyBookmarkletCopied] = useState(false)
   const [clipboardHint, setClipboardHint] = useState(false)
   const [importMissBanner, setImportMissBanner] = useState(false)
   const bookmarkletLinkRef = useRef<HTMLAnchorElement>(null)
+  const companyBookmarkletLinkRef = useRef<HTMLAnchorElement>(null)
   const importLockRef = useRef(false)
   const importReceivedRef = useRef(false)
+  const companyImportReceivedRef = useRef(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -171,6 +194,7 @@ export function MonitorPage() {
   useEffect(() => {
     const origin = window.location.origin
     setBookmarkletHref(buildPoolBookmarkletHref(origin, '/monitor'))
+    setCompanyBookmarkletHref(buildCompanyBookmarkletHref(origin, '/monitor'))
   }, [])
 
   useEffect(() => {
@@ -178,6 +202,12 @@ export function MonitorPage() {
     if (!el || !bookmarkletHref) return
     el.setAttribute('href', bookmarkletHref)
   }, [bookmarkletHref])
+
+  useEffect(() => {
+    const el = companyBookmarkletLinkRef.current
+    if (!el || !companyBookmarkletHref) return
+    el.setAttribute('href', companyBookmarkletHref)
+  }, [companyBookmarkletHref])
 
   const openPool = useMemo(
     () => pool.filter((p) => p.status === 'gesammelt' || p.status === 'geplant'),
@@ -281,10 +311,29 @@ export function MonitorPage() {
     [importPoolPayload],
   )
 
+  const applyCompanyBookmarkletPayload = useCallback(
+    (payload: AtsCompanyBookmarkletPayload) => {
+      if (!claimCompanyBookmarkletPayload(payload)) return
+      companyImportReceivedRef.current = true
+      const fields = resolveCompanyImportFields(payload)
+      setCompanyName(fields.name)
+      setCompanyUrl(fields.website_url)
+      setCompanyNotes(fields.notes)
+      setPanel('company')
+      setEditingId(null)
+      setNotice(
+        'Firmen-Bookmarklet vorausgefüllt — als spannendes Unternehmen vorschlagen.',
+      )
+    },
+    [],
+  )
+
   useEffect(() => {
     if (!user) return
 
-    const fromBookmarklet = searchParams.get('from') === 'bookmarklet'
+    const fromParam = searchParams.get('from')
+    const fromCompanyBookmarklet = fromParam === 'company-bookmarklet'
+    const fromBookmarklet = fromParam === 'bookmarklet'
     const wantClipboard = searchParams.get('import') === 'clipboard'
     let cancelled = false
     let missTimer: number | undefined
@@ -303,7 +352,32 @@ export function MonitorPage() {
       if (changed) setSearchParams(next, { replace: true })
     }
 
-    async function ingestAvailable() {
+    async function ingestCompany() {
+      const stored = loadCompanyBookmarkletPayload()
+      if (stored) {
+        applyCompanyBookmarkletPayload(stored)
+        return true
+      }
+      const fromHash = consumeCompanyBookmarkletHash()
+      if (fromHash) {
+        saveCompanyBookmarkletPayload(fromHash)
+        applyCompanyBookmarkletPayload(fromHash)
+        return true
+      }
+      if (wantClipboard && fromCompanyBookmarklet) {
+        const fromClip = await readCompanyBookmarkletFromClipboard()
+        if (fromClip) {
+          saveCompanyBookmarkletPayload(fromClip)
+          applyCompanyBookmarkletPayload(fromClip)
+          return true
+        }
+      }
+      return false
+    }
+
+    async function ingestPool() {
+      if (fromCompanyBookmarklet) return false
+
       const stored = loadPoolBookmarkletPayload()
       if (stored) {
         await importPoolPayload(stored)
@@ -317,7 +391,7 @@ export function MonitorPage() {
         return true
       }
 
-      if (wantClipboard) {
+      if (wantClipboard && fromBookmarklet) {
         const ok = await tryClipboardImport(false)
         if (ok) return true
         if (!cancelled) setClipboardHint(true)
@@ -326,11 +400,36 @@ export function MonitorPage() {
       return false
     }
 
-    void ingestAvailable().then((got) => {
+    void (async () => {
+      const gotCompany = await ingestCompany()
       if (cancelled) return
-      if (got || fromBookmarklet || wantClipboard) clearImportQuery()
+      if (gotCompany) {
+        clearImportQuery()
+        return
+      }
 
-      if ((fromBookmarklet || wantClipboard) && !importReceivedRef.current) {
+      const gotPool = await ingestPool()
+      if (cancelled) return
+      if (gotPool || fromBookmarklet || (wantClipboard && !fromCompanyBookmarklet)) {
+        clearImportQuery()
+      }
+
+      if (fromCompanyBookmarklet && !companyImportReceivedRef.current) {
+        missTimer = window.setTimeout(() => {
+          if (cancelled || companyImportReceivedRef.current) return
+          const late = loadCompanyBookmarkletPayload()
+          if (late) {
+            applyCompanyBookmarkletPayload(late)
+            return
+          }
+          setNotice(
+            'Kein Firmen-Import erkannt. Bookmarklet erneut ausführen oder Formular manuell füllen.',
+          )
+        }, 4500)
+        return
+      }
+
+      if ((fromBookmarklet || (wantClipboard && !fromCompanyBookmarklet)) && !importReceivedRef.current) {
         missTimer = window.setTimeout(() => {
           if (cancelled || importReceivedRef.current) return
           const late = loadPoolBookmarkletPayload()
@@ -342,7 +441,7 @@ export function MonitorPage() {
           if (wantClipboard) setClipboardHint(true)
         }, 4500)
       }
-    })
+    })()
 
     function onPoolBookmarkletEvent(event: Event) {
       const detail = (event as CustomEvent<AtsPoolBookmarkletPayload>).detail
@@ -350,15 +449,23 @@ export function MonitorPage() {
       void importPoolPayload(detail)
     }
 
+    function onCompanyBookmarkletEvent(event: Event) {
+      const detail = (event as CustomEvent<AtsCompanyBookmarkletPayload>).detail
+      if (!detail) return
+      applyCompanyBookmarkletPayload(detail)
+    }
+
     window.addEventListener(ATS_POOL_BOOKMARKLET_EVENT, onPoolBookmarkletEvent)
+    window.addEventListener(ATS_COMPANY_BOOKMARKLET_EVENT, onCompanyBookmarkletEvent)
 
     return () => {
       cancelled = true
       if (missTimer) window.clearTimeout(missTimer)
       window.removeEventListener(ATS_POOL_BOOKMARKLET_EVENT, onPoolBookmarkletEvent)
+      window.removeEventListener(ATS_COMPANY_BOOKMARKLET_EVENT, onCompanyBookmarkletEvent)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, importPoolPayload, tryClipboardImport])
+  }, [user, importPoolPayload, tryClipboardImport, applyCompanyBookmarkletPayload])
 
   async function copyBookmarkletCode() {
     if (!bookmarkletHref) {
@@ -376,6 +483,22 @@ export function MonitorPage() {
     }
   }
 
+  async function copyCompanyBookmarkletCode() {
+    if (!companyBookmarkletHref) {
+      setError('Firmen-Bookmarklet noch nicht bereit — Seite kurz neu laden.')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(companyBookmarkletHref)
+      setCompanyBookmarkletCopied(true)
+      window.setTimeout(() => setCompanyBookmarkletCopied(false), 2500)
+    } catch {
+      setError(
+        'Clipboard blockiert. Firmen-Bookmarklet-Code manuell markieren und als Lesezeichen-URL einfügen.',
+      )
+    }
+  }
+
   async function handleClipboardImportClick() {
     setError(null)
     setImportMissBanner(false)
@@ -386,6 +509,19 @@ export function MonitorPage() {
       )
       setClipboardHint(true)
     }
+  }
+
+  async function handleCompanyClipboardImport() {
+    setError(null)
+    const fromClip = await readCompanyBookmarkletFromClipboard()
+    if (!fromClip) {
+      setNotice(
+        'Keine Firmen-Bookmarklet-Daten in der Zwischenablage. Bookmarklet auf der Unternehmensseite ausführen.',
+      )
+      return
+    }
+    saveCompanyBookmarkletPayload(fromClip)
+    applyCompanyBookmarkletPayload(fromClip)
   }
 
   async function handleLogout() {
@@ -478,45 +614,75 @@ export function MonitorPage() {
     if (viewMode === 'cards') {
       return (
         <div className="monitor-card-grid">
-          {items.map((item) => (
-            <MonitorFlipCard
-              key={item.id}
-              ariaLabel={`${item.company_name}: ${item.title || 'Ohne Titel'}`}
-              front={
-                <>
-                  <p className="text-[10px] uppercase tracking-[0.14em] monitor-shell__muted truncate">
-                    {item.company_name || 'Firma'}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold leading-snug line-clamp-4">
-                    {item.title || 'Ohne Titel'}
-                  </p>
-                  <div className="mt-auto pt-3">
-                    <Badge label={POOL_STATUS_LABEL[item.status]} />
-                  </div>
-                </>
-              }
-              back={
-                <>
-                  <p className="text-xs font-medium">{item.company_name}</p>
-                  <p className="mt-1 text-[11px] monitor-shell__muted">
-                    Angelegt {formatDate(item.created_at)}
-                  </p>
-                  <p className="mt-2 text-xs leading-relaxed flex-1 overflow-hidden">
-                    {truncate(item.job_description || item.notes, 220) ||
-                      'Keine Beschreibung.'}
-                  </p>
-                  <button
-                    type="button"
-                    className="monitor-shell__btn monitor-shell__btn--primary mt-2 w-full justify-center text-xs"
-                    onClick={(e) => startEdit(item.id, e)}
-                  >
-                    <Pencil className="w-3.5 h-3.5" aria-hidden />
-                    Bearbeiten
-                  </button>
-                </>
-              }
-            />
-          ))}
+          {items.map((item) => {
+            const jobUrl = resolveJobSourceUrl(item)
+            return (
+              <MonitorFlipCard
+                key={item.id}
+                ariaLabel={`${item.company_name}: ${item.title || 'Ohne Titel'}`}
+                front={
+                  <>
+                    <p className="text-[10px] uppercase tracking-[0.14em] monitor-shell__muted truncate">
+                      {item.company_name || 'Firma'}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold leading-snug line-clamp-4">
+                      {item.title || 'Ohne Titel'}
+                    </p>
+                    <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+                      <Badge label={POOL_STATUS_LABEL[item.status]} />
+                      {jobUrl ? (
+                        <a
+                          href={jobUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="monitor-shell__btn monitor-shell__btn--ghost !p-1.5 shrink-0"
+                          aria-label="Zur Stelle"
+                          title="Zur Stelle"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                        </a>
+                      ) : null}
+                    </div>
+                  </>
+                }
+                back={
+                  <>
+                    <p className="text-xs font-medium">{item.company_name}</p>
+                    <p className="mt-1 text-[11px] monitor-shell__muted">
+                      Angelegt {formatDate(item.created_at)}
+                    </p>
+                    <p className="mt-2 text-xs leading-relaxed flex-1 overflow-hidden">
+                      {truncate(item.job_description || item.notes, 220) ||
+                        'Keine Beschreibung.'}
+                    </p>
+                    <div className="mt-2 flex flex-col gap-1.5">
+                      {jobUrl ? (
+                        <a
+                          href={jobUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="monitor-shell__btn monitor-shell__btn--ghost w-full justify-center text-xs"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                          Zur Stelle
+                        </a>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="monitor-shell__btn monitor-shell__btn--primary w-full justify-center text-xs"
+                        onClick={(e) => startEdit(item.id, e)}
+                      >
+                        <Pencil className="w-3.5 h-3.5" aria-hidden />
+                        Bearbeiten
+                      </button>
+                    </div>
+                  </>
+                }
+              />
+            )
+          })}
         </div>
       )
     }
@@ -738,6 +904,63 @@ export function MonitorPage() {
           )}
         </section>
 
+        <section
+          className="monitor-shell__panel p-4 space-y-3"
+          aria-labelledby="monitor-company-bookmarklet-heading"
+        >
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-md border p-2" style={{ borderColor: 'var(--surface-border)' }}>
+              <Building2 className="w-4 h-4" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h2 id="monitor-company-bookmarklet-heading" className="text-sm font-semibold">
+                Unternehmen → Vorschlag (Bookmarklet)
+              </h2>
+              <p className="mt-1 text-xs monitor-shell__muted">
+                Auf einer Firmenwebsite klicken — Name, Link und Markierung werden vorausgefüllt.
+                Du schlägst nur vor; Planen/Beworben macht Sven im Admin.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void copyCompanyBookmarkletCode()}
+              className="monitor-shell__btn monitor-shell__btn--primary"
+            >
+              <Copy className="w-4 h-4" aria-hidden />
+              {companyBookmarkletCopied ? 'Kopiert!' : 'Firmen-Bookmarklet kopieren'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleCompanyClipboardImport()}
+              className="monitor-shell__btn monitor-shell__btn--ghost"
+            >
+              <ClipboardPaste className="w-4 h-4" aria-hidden />
+              Zwischenablage → Vorschlag
+            </button>
+            <a
+              ref={companyBookmarkletLinkRef}
+              className="monitor-shell__btn monitor-shell__btn--ghost cursor-grab text-xs"
+              draggable
+              onDragStart={(e) => {
+                if (companyBookmarkletHref) {
+                  e.dataTransfer.setData('text/uri-list', companyBookmarkletHref)
+                  e.dataTransfer.setData('text/plain', companyBookmarkletHref)
+                }
+              }}
+              onClick={(e) => e.preventDefault()}
+            >
+              Lesezeichen hierher ziehen
+            </a>
+          </div>
+          {companyBookmarkletCopied && (
+            <p className="text-xs monitor-shell__muted">
+              Code kopiert. Als Lesezeichen „Unternehmen → Vorschlag“ anlegen.
+            </p>
+          )}
+        </section>
+
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -898,7 +1121,7 @@ export function MonitorPage() {
             className="monitor-shell__panel p-4 space-y-3"
           >
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold">Unternehmen vorschlagen</h2>
+              <h2 className="text-sm font-semibold">Spannendes Unternehmen vorschlagen</h2>
               <button
                 type="button"
                 className="text-xs monitor-shell__muted"
@@ -907,6 +1130,10 @@ export function MonitorPage() {
                 Schließen
               </button>
             </div>
+            <p className="text-xs monitor-shell__muted rounded-md border px-2.5 py-2" style={{ borderColor: 'var(--surface-border)' }}>
+              Wird bei Sven als <strong>Monitor-Vorschlag</strong> für ein interessantes Unternehmen
+              markiert — ohne Plan-/Beworben-Rechte.
+            </p>
             <label className="block space-y-1">
               <span className="text-xs font-medium monitor-shell__muted">Name *</span>
               <input

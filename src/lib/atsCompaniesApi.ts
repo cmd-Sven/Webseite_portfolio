@@ -1,9 +1,15 @@
+import { ensureApplicationForPool, markAppliedAndDownloadCalendar } from './atsApi'
+import { createPlanForPoolEntries, todayLocalDateString } from './atsPlanApi'
+import { createJobPoolEntry } from './atsPoolApi'
 import { supabase } from './supabaseClient'
 import type {
+  ApplicationRow,
   CompanyEventRow,
   CompanyEventType,
   InterestingCompanyRow,
   InterestingCompanyWithBadges,
+  JobPoolApplicationType,
+  JobPoolRow,
 } from '../types/ats'
 
 function normalizeOptional(value: string | null | undefined): string | null {
@@ -46,6 +52,8 @@ export async function createInterestingCompany(input: {
   name: string
   website_url?: string | null
   notes?: string | null
+  /** Event-Payload-Quelle, z. B. admin_ui | bookmarklet */
+  source?: string
 }): Promise<{ data: InterestingCompanyRow | null; error: string | null }> {
   const name = input.name.trim()
   if (!name) return { data: null, error: 'Name fehlt' }
@@ -79,13 +87,180 @@ export async function createInterestingCompany(input: {
     await supabase.from('company_events').insert({
       company_id: data.id,
       event_type: 'created_manual' satisfies CompanyEventType,
-      payload: { source: 'admin_ui' },
+      payload: { source: input.source ?? 'admin_ui' },
       note: normalizeOptional(input.notes),
       created_by: input.user_id,
     })
   }
 
   return { data: data as InterestingCompanyRow | null, error: null }
+}
+
+/**
+ * Anlegen oder bestehende Firma (gleicher normalisierter Name) aktualisieren.
+ * Für Bookmarklet-/URL-Import: Website & Notizen werden gemerged.
+ */
+export async function upsertInterestingCompanyFromImport(input: {
+  user_id: string
+  name: string
+  website_url?: string | null
+  notes?: string | null
+  source?: string
+}): Promise<{
+  data: InterestingCompanyRow | null
+  created: boolean
+  error: string | null
+}> {
+  const name = input.name.trim()
+  if (!name) return { data: null, created: false, error: 'Name fehlt' }
+
+  const normalized = normalizeCompanyNameClient(name)
+  const { data: existing } = await supabase
+    .from('interesting_companies')
+    .select('*')
+    .eq('user_id', input.user_id)
+    .eq('normalized_name', normalized)
+    .maybeSingle()
+
+  if (existing) {
+    const patch: Partial<Pick<InterestingCompanyRow, 'website_url' | 'notes'>> = {}
+    let websiteUrl = normalizeOptional(input.website_url)
+    if (websiteUrl && !/^https?:\/\//i.test(websiteUrl)) {
+      websiteUrl = `https://${websiteUrl}`
+    }
+    if (websiteUrl) patch.website_url = websiteUrl
+    const notes = normalizeOptional(input.notes)
+    if (notes) {
+      const prev = (existing.notes ?? '').trim()
+      patch.notes = prev && !prev.includes(notes) ? `${prev}\n\n${notes}` : notes
+    }
+    if (Object.keys(patch).length === 0) {
+      return { data: existing as InterestingCompanyRow, created: false, error: null }
+    }
+    const { data, error } = await updateInterestingCompany(existing.id, patch)
+    if (!error && data) {
+      await supabase
+        .from('interesting_companies')
+        .update({ last_contact_at: new Date().toISOString() })
+        .eq('id', data.id)
+      await supabase.from('company_events').insert({
+        company_id: data.id,
+        event_type: 'note' satisfies CompanyEventType,
+        payload: { source: input.source ?? 'import', action: 'upsert_existing' },
+        note: 'Import: bestehendes Unternehmen aktualisiert',
+        created_by: input.user_id,
+      })
+    }
+    return { data, created: false, error }
+  }
+
+  const { data, error } = await createInterestingCompany({
+    ...input,
+    source: input.source ?? 'import',
+  })
+  return { data, created: true, error }
+}
+
+export type CompanyApplicationActionResult = {
+  pool: JobPoolRow | null
+  application: ApplicationRow | null
+  planned: boolean
+  markedApplied: boolean
+}
+
+/**
+ * Admin-Flow: aus interessantem Unternehmen Pool-Eintrag (regular|initiative),
+ * optional planen und/oder als beworben markieren.
+ */
+export async function startCompanyApplicationFlow(params: {
+  userId: string
+  company: Pick<InterestingCompanyRow, 'name' | 'website_url' | 'notes'>
+  applicationType: JobPoolApplicationType
+  /** Stellen-Titel (bei regular); Default je nach Typ */
+  title?: string | null
+  /** Zusätzliche Notiz / Zielbereich */
+  extraNotes?: string | null
+  /** In den Bewerbungsplan ab diesem Tag (YYYY-MM-DD); null = nicht planen */
+  planFromDate?: string | null
+  /** Sofort als beworben markieren */
+  markApplied?: boolean
+}): Promise<{ data: CompanyApplicationActionResult | null; error: string | null }> {
+  const companyName = params.company.name.trim()
+  if (!companyName) return { data: null, error: 'Firmenname fehlt' }
+
+  const isInitiative = params.applicationType === 'initiative'
+  const title =
+    params.title?.trim() ||
+    (isInitiative ? 'Initiativbewerbung' : `Stelle bei ${companyName}`)
+  const notesParts = [
+    params.company.notes?.trim(),
+    params.extraNotes?.trim(),
+  ].filter(Boolean)
+  const notes = notesParts.length ? notesParts.join('\n\n') : null
+
+  const { data: pool, error: poolError } = await createJobPoolEntry({
+    user_id: params.userId,
+    application_type: params.applicationType,
+    title,
+    company_name: companyName,
+    status: 'gesammelt',
+    source_url: params.company.website_url,
+    notes,
+    company_info: isInitiative ? notes : null,
+    target_notes: isInitiative ? params.extraNotes?.trim() || null : null,
+  })
+
+  if (poolError || !pool) {
+    return { data: null, error: poolError || 'Pool-Eintrag fehlgeschlagen' }
+  }
+
+  let planned = false
+  const planDate = params.planFromDate?.trim()
+  if (planDate) {
+    const { error: planError } = await createPlanForPoolEntries({
+      userId: params.userId,
+      poolIds: [pool.id],
+      startDate: planDate || todayLocalDateString(),
+    })
+    if (planError) {
+      return {
+        data: { pool, application: null, planned: false, markedApplied: false },
+        error: `Pool angelegt, Planung fehlgeschlagen: ${planError}`,
+      }
+    }
+    planned = true
+  }
+
+  let application: ApplicationRow | null = null
+  let markedApplied = false
+
+  if (params.markApplied) {
+    const { data: app, error: appError } = await ensureApplicationForPool(pool)
+    if (appError || !app) {
+      return {
+        data: { pool, application: null, planned, markedApplied: false },
+        error: appError || 'Bewerbung konnte nicht angelegt werden',
+      }
+    }
+    application = app
+    const { data: applied, error: applyError } = await markAppliedAndDownloadCalendar(app, {
+      skipCalendarDownload: true,
+      sentManually: true,
+    })
+    if (applyError) {
+      return {
+        data: { pool, application: app, planned, markedApplied: false },
+        error: `Bewerbung angelegt, Status Beworben fehlgeschlagen: ${applyError}`,
+      }
+    }
+    application = applied
+    markedApplied = true
+  }
+
+  return {
+    data: { pool, application, planned, markedApplied },
+    error: null,
+  }
 }
 
 export async function updateInterestingCompany(
