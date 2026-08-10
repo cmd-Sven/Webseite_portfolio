@@ -26,6 +26,9 @@ import { ThemeSwitcher } from '../components/ThemeSwitcher'
 type HeaderIntroPhase = 'video' | 'fading' | 'sliding' | 'nav'
 type IntroKeywordSide = 'left' | 'right'
 
+/** Logo-Video-Intro im Header — false = sofort sticky Nav (kein Banner, kein Slide-up). */
+const INTRO_VIDEO_ENABLED = false
+
 const INTRO_SEEN_KEY = 'sieber-intro-seen'
 
 const INTRO_KEYWORDS = [
@@ -78,6 +81,7 @@ function markIntroSeen(): void {
 }
 
 function getInitialHeaderPhase(): HeaderIntroPhase {
+  if (!INTRO_VIDEO_ENABLED) return 'nav'
   if (typeof window === 'undefined') return 'video'
   if (hasIntroBeenSeen() || prefersReducedMotion()) return 'nav'
   return 'video'
@@ -108,7 +112,8 @@ function PortfolioPageContent() {
   const [adminLoginOpen, setAdminLoginOpen] = useState(false)
   const [headerPhase, setHeaderPhase] = useState<HeaderIntroPhase>(getInitialHeaderPhase)
   const [skipNavReveal] = useState(
-    () => hasIntroBeenSeen() || prefersReducedMotion(),
+    () =>
+      !INTRO_VIDEO_ENABLED || hasIntroBeenSeen() || prefersReducedMotion(),
   )
   const [introKeywords, setIntroKeywords] = useState<IntroKeywordParticle[]>([])
 
@@ -220,22 +225,24 @@ function PortfolioPageContent() {
   }
 
   useEffect(() => {
-    if (headerPhase !== 'fading') return
+    if (!INTRO_VIDEO_ENABLED || headerPhase !== 'fading') return
     const timer = window.setTimeout(() => setHeaderPhase('sliding'), 420)
     return () => window.clearTimeout(timer)
   }, [headerPhase])
 
   useEffect(() => {
-    if (headerPhase !== 'sliding') return
+    if (!INTRO_VIDEO_ENABLED || headerPhase !== 'sliding') return
     const timer = window.setTimeout(() => setHeaderPhase('nav'), 580)
     return () => window.clearTimeout(timer)
   }, [headerPhase])
 
   useEffect(() => {
+    if (!INTRO_VIDEO_ENABLED) return
     if (headerPhase === 'nav') markIntroSeen()
   }, [headerPhase])
 
   useEffect(() => {
+    if (!INTRO_VIDEO_ENABLED) return
     if (prefersReducedMotion()) {
       setHeaderPhase('nav')
       return
@@ -264,7 +271,7 @@ function PortfolioPageContent() {
 
   /** Random Schlagwort-Overlay links/rechts über die volle Intro-Banner-Breite */
   useEffect(() => {
-    if (headerPhase !== 'video' || prefersReducedMotion()) {
+    if (!INTRO_VIDEO_ENABLED || headerPhase !== 'video' || prefersReducedMotion()) {
       setIntroKeywords([])
       return
     }
@@ -369,8 +376,8 @@ function PortfolioPageContent() {
   }, [headerPhase])
 
   /* Nav schon unter dem Panel bereit, damit der Slide-up sie freigibt */
-  const navReady = headerPhase !== 'video'
-  const showIntro = headerPhase !== 'nav'
+  const navReady = !INTRO_VIDEO_ENABLED || headerPhase !== 'video'
+  const showIntro = INTRO_VIDEO_ENABLED && headerPhase !== 'nav'
 
   return (
     <div className="viewport-studio w-full">
@@ -503,7 +510,11 @@ function PortfolioPageContent() {
             <SectionNav
               activeSection={activeSection}
               onNavigate={scrollToSection}
-              introReady={headerPhase === 'sliding' || headerPhase === 'nav'}
+              introReady={
+                !INTRO_VIDEO_ENABLED ||
+                headerPhase === 'sliding' ||
+                headerPhase === 'nav'
+              }
               skipReveal={skipNavReveal}
             />
             <ScrollToTopButton scrollContainerRef={containerRef} />

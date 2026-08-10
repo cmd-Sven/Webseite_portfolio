@@ -45,6 +45,10 @@ import {
   type AtsCompanyBookmarkletPayload,
 } from '../../lib/atsCompanyBookmarklet'
 import {
+  bookmarkletUsesLiveSite,
+  getBookmarkletSiteOrigin,
+} from '../../lib/bookmarkletSiteUrl'
+import {
   ATS_POOL_BOOKMARKLET_EVENT,
   buildPoolBookmarkletHref,
   claimPoolBookmarkletPayload,
@@ -192,7 +196,7 @@ export function MonitorPage() {
   }, [load])
 
   useEffect(() => {
-    const origin = window.location.origin
+    const origin = getBookmarkletSiteOrigin()
     setBookmarkletHref(buildPoolBookmarkletHref(origin, '/monitor'))
     setCompanyBookmarkletHref(buildCompanyBookmarkletHref(origin, '/monitor'))
   }, [])
@@ -834,7 +838,7 @@ export function MonitorPage() {
           aria-labelledby="monitor-bookmarklet-heading"
         >
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-md border p-2" style={{ borderColor: 'var(--surface-border)' }}>
+            <div className="mt-0.5 monitor-shell__icon-plate">
               <Bookmark className="w-4 h-4" aria-hidden />
             </div>
             <div className="min-w-0">
@@ -844,6 +848,9 @@ export function MonitorPage() {
               <p className="mt-1 text-xs monitor-shell__muted">
                 Auf der Stellenanzeige klicken — landet direkt in Svens Stellen-Pool.
                 Danach kannst du Details bearbeiten (kein Initiativ-/Bewerbungs-Umschalten).
+                {bookmarkletUsesLiveSite()
+                  ? ' Bookmarklet zeigt immer auf die Live-Site.'
+                  : ''}
               </p>
             </div>
           </div>
@@ -909,7 +916,7 @@ export function MonitorPage() {
           aria-labelledby="monitor-company-bookmarklet-heading"
         >
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-md border p-2" style={{ borderColor: 'var(--surface-border)' }}>
+            <div className="mt-0.5 monitor-shell__icon-plate">
               <Building2 className="w-4 h-4" aria-hidden />
             </div>
             <div className="min-w-0">
@@ -919,6 +926,9 @@ export function MonitorPage() {
               <p className="mt-1 text-xs monitor-shell__muted">
                 Auf einer Firmenwebsite klicken — Name, Link und Markierung werden vorausgefüllt.
                 Du schlägst nur vor; Planen/Beworben macht Sven im Admin.
+                {bookmarkletUsesLiveSite()
+                  ? ' Bookmarklet zeigt immer auf die Live-Site.'
+                  : ''}
               </p>
             </div>
           </div>
@@ -1130,7 +1140,7 @@ export function MonitorPage() {
                 Schließen
               </button>
             </div>
-            <p className="text-xs monitor-shell__muted rounded-md border px-2.5 py-2" style={{ borderColor: 'var(--surface-border)' }}>
+            <p className="text-xs monitor-shell__muted monitor-shell__alert">
               Wird bei Sven als <strong>Monitor-Vorschlag</strong> für ein interessantes Unternehmen
               markiert — ohne Plan-/Beworben-Rechte.
             </p>
@@ -1174,7 +1184,7 @@ export function MonitorPage() {
           </form>
         )}
 
-        <div className="flex gap-1 border-b" style={{ borderColor: 'var(--surface-border)' }}>
+        <div className="monitor-shell__tabs">
           {tabs.map((t) => (
             <button
               key={t.id}
@@ -1193,11 +1203,7 @@ export function MonitorPage() {
 
         {loading && <p className="text-sm monitor-shell__muted">Daten werden geladen …</p>}
         {error && (
-          <div
-            role="alert"
-            className="rounded-md border px-3 py-2 text-sm"
-            style={{ borderColor: 'var(--surface-border)' }}
-          >
+          <div role="alert" className="monitor-shell__alert monitor-shell__alert--danger">
             {error}
           </div>
         )}

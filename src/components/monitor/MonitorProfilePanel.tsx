@@ -100,11 +100,7 @@ export function MonitorProfilePanel({
       </p>
 
       {error && (
-        <div
-          role="alert"
-          className="rounded-md border border-red-400/60 bg-red-500/10 px-3 py-2 text-sm text-red-200"
-          style={{ color: 'var(--text-primary)', borderColor: 'var(--surface-border)' }}
-        >
+        <div role="alert" className="monitor-shell__alert monitor-shell__alert--danger">
           {error}
         </div>
       )}

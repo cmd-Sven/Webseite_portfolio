@@ -145,7 +145,7 @@ export function MonitorPoolEditor({
       </div>
 
       {error && (
-        <div role="alert" className="rounded-md border px-3 py-2 text-sm" style={{ borderColor: 'var(--surface-border)' }}>
+        <div role="alert" className="monitor-shell__alert monitor-shell__alert--danger">
           {error}
         </div>
       )}

@@ -1,4 +1,4 @@
-/* Monitor-Shell: an data-appearance / Theme-Tokens gebunden */
+/* Monitor-Shell: Dark / Light / Kontrast über data-appearance + Theme-Tokens */
 
 .monitor-shell {
   min-height: 100vh;
@@ -7,15 +7,27 @@
   color-scheme: inherit;
 }
 
+.monitor-shell a:not(.monitor-shell__btn) {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+.monitor-shell a:not(.monitor-shell__btn):hover {
+  color: var(--accent-secondary);
+}
+
 .monitor-shell__header {
   border-bottom: 1px solid var(--surface-border);
-  background: var(--glass-bg);
+  background: color-mix(in srgb, var(--glass-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
 }
 
 .monitor-shell__panel {
   border: 1px solid var(--surface-border);
   background: var(--glass-bg);
   border-radius: 0.75rem;
+  box-shadow: var(--glass-shadow);
 }
 
 .monitor-shell__muted {
@@ -31,11 +43,21 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.monitor-shell__input::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 85%, transparent);
 }
 
 .monitor-shell__input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+.monitor-shell__input option {
+  background: var(--glass-bg);
+  color: var(--text-primary);
 }
 
 .monitor-shell__btn {
@@ -46,17 +68,18 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .monitor-shell__btn--primary {
-  background: var(--text-primary);
-  color: var(--page-bg);
-  border: 1px solid transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
 }
 
 .monitor-shell__btn--primary:hover {
-  opacity: 0.9;
+  filter: brightness(1.08);
 }
 
 .monitor-shell__btn--ghost {
@@ -67,11 +90,24 @@
 
 .monitor-shell__btn--ghost:hover {
   border-color: var(--accent);
+  color: var(--accent);
 }
 
 .monitor-shell__btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  filter: none;
+}
+
+.monitor-shell__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.monitor-shell__tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .monitor-shell__tab {
@@ -83,10 +119,19 @@
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.monitor-shell__tab--active {
-  border-bottom-color: var(--text-primary);
+.monitor-shell__tab:hover {
   color: var(--text-primary);
-  font-weight: 500;
+}
+
+.monitor-shell__tab--active {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.monitor-shell__tab--active .monitor-shell__muted {
+  color: var(--accent);
+  opacity: 0.85;
 }
 
 .monitor-shell__badge {
@@ -95,10 +140,33 @@
   border-radius: 0.375rem;
   padding: 0.125rem 0.5rem;
   font-size: 11px;
-  font-weight: 500;
-  border: 1px solid var(--surface-border);
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--surface-border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--glass-bg));
   color: var(--text-primary);
+}
+
+.monitor-shell__alert {
+  border-radius: 0.375rem;
+  border: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--accent) 8%, var(--glass-bg));
+  color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.monitor-shell__alert--danger {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--text-primary);
+}
+
+.monitor-shell__icon-plate {
+  border: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--accent) 10%, var(--glass-bg));
+  color: var(--accent);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
 }
 
 /* Listen-/Karten-Toggle */
@@ -108,7 +176,7 @@
   gap: 0.25rem;
   padding: 0.2rem;
   border-radius: 999px;
-  border: 1px solid var(--surface-border);
+  border: 1px solid var(--switcher-border);
   background: var(--switcher-bg);
 }
 
@@ -127,6 +195,11 @@
 .monitor-view-toggle__btn--active {
   background: var(--switcher-active-bg);
   color: var(--switcher-active-text);
+}
+
+.monitor-view-toggle__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* Spielkarten-Grid + Flip */
@@ -168,10 +241,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  color: var(--text-primary);
 }
 
 .monitor-flip__face--back {
   transform: rotateY(180deg);
+  background: var(--glass-bg);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--surface-border));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -180,18 +256,131 @@
   }
 }
 
-[data-appearance='contrast'] .monitor-flip__face {
-  background: #000;
-  border-width: 2px;
-  box-shadow: none;
+/* ——— Light: weiße Flächen, dunkle Schrift, klarer Accent ——— */
+[data-appearance='light'] .monitor-shell__header {
+  background: color-mix(in srgb, var(--glass-bg) 96%, transparent);
 }
 
-[data-appearance='contrast'] .monitor-shell__btn--primary {
-  background: #ffff00;
-  color: #000;
-  border: 2px solid #fff;
+[data-appearance='light'] .monitor-shell__panel {
+  background: var(--glass-bg);
+  border-color: var(--surface-border);
+}
+
+[data-appearance='light'] .monitor-shell__btn--primary:hover {
+  filter: brightness(0.95);
+}
+
+[data-appearance='light'] .monitor-flip__face {
+  background: var(--glass-gradient, var(--glass-bg));
+}
+
+/* ——— Dark: dunkler Grund, helle Schrift, Cyan-Accent ——— */
+[data-appearance='dark'] .monitor-shell__badge {
+  color: var(--accent);
+}
+
+[data-appearance='dark'] .monitor-shell__tab--active {
+  color: var(--accent);
+}
+
+/* ——— Kontrast: starke Kanten, gelber Accent, keine Weichzeichner ——— */
+[data-appearance='contrast'] .monitor-shell__header {
+  backdrop-filter: none;
+  background: var(--page-bg);
+  border-bottom-width: 2px;
+}
+
+[data-appearance='contrast'] .monitor-shell__tabs {
+  border-bottom-width: 2px;
+}
+
+[data-appearance='contrast'] .monitor-shell__panel {
+  box-shadow: none;
+  border-width: 2px;
+  background: var(--page-bg);
 }
 
 [data-appearance='contrast'] .monitor-shell__input {
   border-width: 2px;
+  background: var(--page-bg);
+}
+
+[data-appearance='contrast'] .monitor-shell__input:focus {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+[data-appearance='contrast'] .monitor-shell__btn--primary {
+  border-width: 2px;
+  border-color: var(--text-primary);
+  filter: none;
+}
+
+[data-appearance='contrast'] .monitor-shell__btn--primary:hover {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  filter: none;
+}
+
+[data-appearance='contrast'] .monitor-shell__btn--ghost {
+  border-width: 2px;
+  background: var(--page-bg);
+}
+
+[data-appearance='contrast'] .monitor-shell__btn--ghost:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--text-primary);
+}
+
+[data-appearance='contrast'] .monitor-shell__tab--active {
+  border-bottom-width: 3px;
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-appearance='contrast'] .monitor-shell__badge {
+  border-width: 2px;
+  border-color: var(--text-primary);
+  background: var(--page-bg);
+  color: var(--text-primary);
+}
+
+[data-appearance='contrast'] .monitor-shell__alert,
+[data-appearance='contrast'] .monitor-shell__alert--danger {
+  border-width: 2px;
+  border-color: var(--accent);
+  background: var(--page-bg);
+  color: var(--text-primary);
+}
+
+[data-appearance='contrast'] .monitor-shell__icon-plate {
+  border-width: 2px;
+  border-color: var(--text-primary);
+  background: var(--page-bg);
+  color: var(--accent);
+}
+
+[data-appearance='contrast'] .monitor-view-toggle {
+  border-width: 2px;
+}
+
+[data-appearance='contrast'] .monitor-flip__face {
+  background: var(--page-bg);
+  border-width: 2px;
+  border-color: var(--surface-border);
+  box-shadow: none;
+}
+
+[data-appearance='contrast'] .monitor-flip__face--back {
+  border-color: var(--accent);
+}
+
+[data-appearance='contrast'] .monitor-shell a:not(.monitor-shell__btn) {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+[data-appearance='contrast'] .monitor-shell a:not(.monitor-shell__btn):hover {
+  color: var(--text-primary);
+  background: var(--accent);
 }

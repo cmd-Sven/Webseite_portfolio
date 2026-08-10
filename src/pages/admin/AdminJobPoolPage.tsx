@@ -17,6 +17,10 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { guessCompanyFromTitle } from '../../lib/atsBookmarklet'
 import {
+  bookmarkletUsesLiveSite,
+  getBookmarkletSiteOrigin,
+} from '../../lib/bookmarkletSiteUrl'
+import {
   ATS_POOL_BOOKMARKLET_EVENT,
   ATS_POOL_BOOKMARKLET_STORAGE_KEY,
   ATS_POOL_JOB_MESSAGE_TYPE,
@@ -250,7 +254,7 @@ export function AdminJobPoolPage() {
   }, [load])
 
   useEffect(() => {
-    const origin = window.location.origin
+    const origin = getBookmarkletSiteOrigin()
     setPortfolioOrigin(origin)
     setBookmarkletHref(buildPoolBookmarkletHref(origin))
   }, [])
@@ -815,6 +819,9 @@ export function AdminJobPoolPage() {
               -Links in der App. Deshalb: Code kopieren und als Lesezeichen-URL einfügen — oder
               Text manuell importieren
               {portfolioOrigin ? ` · Ziel: ${portfolioOrigin}` : ''}.
+              {bookmarkletUsesLiveSite()
+                ? ' Bookmarklet zeigt immer auf die Live-Site.'
+                : ''}
             </p>
           </div>
         </div>

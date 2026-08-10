@@ -36,6 +36,10 @@ import {
   saveCompanyBookmarkletPayload,
   type AtsCompanyBookmarkletPayload,
 } from '../../lib/atsCompanyBookmarklet'
+import {
+  bookmarkletUsesLiveSite,
+  getBookmarkletSiteOrigin,
+} from '../../lib/bookmarkletSiteUrl'
 import { guessCompanyFromUrl } from '../../lib/atsPoolBookmarklet'
 import { todayLocalDateString } from '../../lib/atsPlanApi'
 import {
@@ -167,7 +171,9 @@ export function AdminCompaniesPage() {
   }, [reload])
 
   useEffect(() => {
-    setBookmarkletHref(buildCompanyBookmarkletHref(window.location.origin, '/admin/companies'))
+    setBookmarkletHref(
+      buildCompanyBookmarkletHref(getBookmarkletSiteOrigin(), '/admin/companies'),
+    )
   }, [])
 
   useEffect(() => {
@@ -491,6 +497,9 @@ export function AdminCompaniesPage() {
               Auf einer Firmenwebsite (z.&nbsp;B. lmis.de) klicken → URL, Domain als Name und
               Markierung werden hier vorausgefüllt. Danach speichern und optional planen/beworben
               markieren.
+              {bookmarkletUsesLiveSite()
+                ? ' Bookmarklet zeigt immer auf die Live-Site.'
+                : ''}
             </p>
           </div>
         </div>
