@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowDown,
   ArrowUp,
+  CalendarClock,
   CalendarDays,
   CalendarPlus,
   CheckCircle2,
@@ -28,10 +29,13 @@ import {
   applySlotMove,
   createPlanForPoolEntries,
   getTodayOrNextSlots,
+  isOverduePlanSlot,
+  isTodoPlanSlotStatus,
   listAllPlanSlots,
   listPoolEntriesForPlanning,
   persistPlanSlotSchedule,
   rebuildOpenPlanSchedule,
+  replanExistingPlanSlots,
   todayLocalDateString,
   type MoveSlotAction,
   type PlanSlotWithPool,
@@ -132,9 +136,14 @@ export function AdminPlanPage() {
   const [slots, setSlots] = useState<PlanSlotWithPool[]>([])
   const [focusSlots, setFocusSlots] = useState<PlanSlotWithPool[]>([])
   const [startDate, setStartDate] = useState(defaultStartDate)
+  const [replanStartDate, setReplanStartDate] = useState(defaultStartDate)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [overdueSelectedIds, setOverdueSelectedIds] = useState<Set<string>>(
+    new Set(),
+  )
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [replanning, setReplanning] = useState(false)
   const [busyAction, setBusyAction] = useState(false)
   const [reschedulingId, setReschedulingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -155,10 +164,16 @@ export function AdminPlanPage() {
     if (slotsRes.error) setError((prev) => prev || slotsRes.error)
     if (focusRes.error) setError((prev) => prev || focusRes.error)
 
+    const todayStr = todayLocalDateString()
+    const overdueIds = slotsRes.data
+      .filter((s) => isOverduePlanSlot(s, todayStr))
+      .map((s) => s.id)
+
     setPoolCandidates(poolRes.data)
     setSlots(slotsRes.data)
     setFocusSlots(focusRes.data)
     setSelectedIds(new Set(poolRes.data.map((e) => e.id)))
+    setOverdueSelectedIds(new Set(overdueIds))
     setLoading(false)
   }, [])
 
@@ -168,10 +183,11 @@ export function AdminPlanPage() {
 
   const today = todayLocalDateString()
 
+  /** Offene Todos inkl. uebersprungen (ausgesetzte Tage bleiben planbar). */
   const upcomingSlots = useMemo(
     () =>
       slots
-        .filter((s) => s.status !== 'erledigt' && s.status !== 'uebersprungen')
+        .filter((s) => isTodoPlanSlotStatus(s.status))
         .sort((a, b) => {
           if (a.plan_date !== b.plan_date) return a.plan_date.localeCompare(b.plan_date)
           return a.sort_order - b.sort_order
@@ -179,8 +195,16 @@ export function AdminPlanPage() {
     [slots],
   )
 
+  const overdueSlots = useMemo(
+    () => upcomingSlots.filter((s) => isOverduePlanSlot(s, today)),
+    [upcomingSlots, today],
+  )
+
   const allSelected =
     poolCandidates.length > 0 && selectedIds.size === poolCandidates.length
+
+  const allOverdueSelected =
+    overdueSlots.length > 0 && overdueSelectedIds.size === overdueSlots.length
 
   const isFocusToday =
     focusSlots.length > 0 && focusSlots.every((s) => s.plan_date === today)
@@ -199,6 +223,23 @@ export function AdminPlanPage() {
       setSelectedIds(new Set())
     } else {
       setSelectedIds(new Set(poolCandidates.map((e) => e.id)))
+    }
+  }
+
+  function toggleOverdueSelect(id: string) {
+    setOverdueSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleOverdueSelectAll() {
+    if (allOverdueSelected) {
+      setOverdueSelectedIds(new Set())
+    } else {
+      setOverdueSelectedIds(new Set(overdueSlots.map((s) => s.id)))
     }
   }
 
@@ -245,17 +286,65 @@ export function AdminPlanPage() {
       data.skippedOccupiedDates.length > 0
         ? ` (${data.skippedOccupiedDates.length} belegte Tage übersprungen)`
         : ''
+    const alreadyPlannedHint =
+      data.skippedAlreadyPlannedPoolIds.length > 0
+        ? ` (${data.skippedAlreadyPlannedPoolIds.length} bereits im Plan)`
+        : ''
 
-    if (icalError) {
+    if (data.slots.length === 0) {
       setNotice(
-        `Plan mit ${data.slots.length} Tagen erstellt${skipHint}. Kalender-Export: ${icalError}`,
+        data.skippedAlreadyPlannedPoolIds.length > 0
+          ? `Alle ausgewählten Stellen sind bereits im Plan${alreadyPlannedHint}.`
+          : 'Keine neuen Plan-Slots angelegt.',
+      )
+    } else if (icalError) {
+      setNotice(
+        `Plan um ${data.slots.length} Tag(e) erweitert${skipHint}${alreadyPlannedHint}. Kalender-Export: ${icalError}`,
       )
     } else {
       setNotice(
-        `Plan mit ${data.slots.length} Tagen erstellt${skipHint}. .ics „${filename}“ heruntergeladen — in Apple Kalender importieren.`,
+        `Plan um ${data.slots.length} Tag(e) erweitert${skipHint}${alreadyPlannedHint}. .ics „${filename}“ heruntergeladen — in Apple Kalender importieren.`,
       )
     }
 
+    await load()
+  }
+
+  async function handleReplanOverdue(slotIds?: string[]) {
+    if (!user) {
+      setError('Nicht angemeldet')
+      return
+    }
+    const ids = slotIds ?? [...overdueSelectedIds]
+    if (ids.length === 0) {
+      setError('Bitte mindestens einen überfälligen Slot auswählen')
+      return
+    }
+
+    setReplanning(true)
+    setError(null)
+    setNotice(null)
+
+    const { data, error: replanError } = await replanExistingPlanSlots({
+      userId: user.id,
+      slotIds: ids,
+      startDate: replanStartDate,
+    })
+
+    setReplanning(false)
+
+    if (replanError || !data) {
+      setError(replanError || 'Umplanung fehlgeschlagen')
+      return
+    }
+
+    const skipHint =
+      data.skippedOccupiedDates.length > 0
+        ? ` (${data.skippedOccupiedDates.length} belegte Tage übersprungen)`
+        : ''
+    setNotice(
+      `${data.slots.length} Todo(s) neu geplant ab ${formatPlanDate(replanStartDate)}${skipHint}.`,
+    )
     await load()
   }
 
@@ -381,7 +470,7 @@ export function AdminPlanPage() {
     )
   }
 
-  const moveBusy = reschedulingId != null || busyAction
+  const moveBusy = reschedulingId != null || busyAction || replanning
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -391,8 +480,9 @@ export function AdminPlanPage() {
         </h2>
         <p className="text-sm text-zinc-500 leading-relaxed max-w-2xl">
           Eine Bewerbung pro Tag planen — oder gezielt zwei an einem Tag vorziehen.
-          Nach dem Verschieben wird der Restplan automatisch nachgezogen. Kalender-Sync
-          über .ics-Download (Apple Kalender) — kein Live-CalDAV.
+          Verpasste oder ausgesetzte Tage bleiben als Todos und lassen sich neu
+          planen. Nach dem Verschieben wird der Restplan automatisch nachgezogen.
+          Kalender-Sync über .ics-Download (Apple Kalender) — kein Live-CalDAV.
         </p>
       </div>
 
@@ -415,6 +505,116 @@ export function AdminPlanPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Überfällige Todos */}
+      {!loading && overdueSlots.length > 0 && (
+        <section
+          aria-labelledby="overdue-heading"
+          className="rounded-lg border border-amber-200 bg-amber-50/60 p-5 md:p-6 shadow-sm space-y-4"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="mt-0.5 rounded-md bg-amber-100 p-2 text-amber-800">
+                <CalendarClock className="w-4 h-4" aria-hidden />
+              </div>
+              <div className="min-w-0 space-y-1">
+                <h3
+                  id="overdue-heading"
+                  className="text-sm font-semibold text-zinc-900"
+                >
+                  Überfällige Todos ({overdueSlots.length})
+                </h3>
+                <p className="text-sm text-zinc-600">
+                  Verpasste oder ausgesetzte Plan-Tage — nicht erledigt. Neu planen
+                  verschiebt das Datum (kein Doppel-Eintrag).
+                </p>
+              </div>
+            </div>
+            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+              Neu planen ab
+              <input
+                type="date"
+                value={replanStartDate}
+                onChange={(e) => setReplanStartDate(e.target.value)}
+                className="rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-sm text-zinc-800 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+              />
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={toggleOverdueSelectAll}
+              className="text-xs font-medium text-zinc-600 hover:text-zinc-900"
+            >
+              {allOverdueSelected ? 'Auswahl aufheben' : 'Alle auswählen'}
+            </button>
+            <span className="text-xs text-zinc-500 tabular-nums">
+              {overdueSelectedIds.size} / {overdueSlots.length}
+            </span>
+          </div>
+
+          <ul className="divide-y divide-amber-100/80 border border-amber-100 rounded-md bg-white/80 max-h-72 overflow-y-auto">
+            {overdueSlots.map((slot) => {
+              const pool = slot.job_pool
+              const checked = overdueSelectedIds.has(slot.id)
+              return (
+                <li key={slot.id}>
+                  <label className="flex items-start gap-3 px-3 py-2.5 hover:bg-amber-50/50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleOverdueSelect(slot.id)}
+                      className="mt-1 accent-amber-700"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs text-amber-800/80">
+                        {formatPlanDate(slot.plan_date)}
+                        {' · '}
+                        {SLOT_STATUS_LABEL[slot.status] ?? slot.status}
+                        {' · überfällig'}
+                      </span>
+                      <span className="block text-sm font-medium text-zinc-900 truncate">
+                        {pool?.company_name ?? 'Ohne Zuweisung'}
+                      </span>
+                      <span className="block text-xs text-zinc-500 truncate">
+                        {pool
+                          ? `${poolTitle(pool)} · ${TYPE_LABEL[pool.application_type]}`
+                          : '—'}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      disabled={replanning || moveBusy}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        void handleReplanOverdue([slot.id])
+                      }}
+                      className="shrink-0 rounded border border-amber-200 bg-white px-2 py-1 text-[11px] font-medium text-amber-900 hover:bg-amber-50 disabled:opacity-50"
+                    >
+                      Neu planen
+                    </button>
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+
+          <button
+            type="button"
+            disabled={replanning || overdueSelectedIds.size === 0}
+            onClick={() => void handleReplanOverdue()}
+            className="inline-flex items-center gap-2 rounded-md bg-amber-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-800 disabled:opacity-50 transition-colors"
+          >
+            {replanning ? (
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+            ) : (
+              <CalendarPlus className="w-4 h-4" aria-hidden />
+            )}
+            {overdueSelectedIds.size} Todo(s) neu planen
+          </button>
+        </section>
       )}
 
       {/* Heute / nächster Slot */}
@@ -680,21 +880,22 @@ export function AdminPlanPage() {
           <ul className="rounded-lg border border-zinc-200 bg-white divide-y divide-zinc-100 shadow-sm">
             {slots.map((slot) => {
               const pool = slot.job_pool
-              const isOpen =
-                slot.status !== 'erledigt' && slot.status !== 'uebersprungen'
+              const isOpen = isTodoPlanSlotStatus(slot.status)
+              const overdue = isOverduePlanSlot(slot, today)
               const openIndex = upcomingSlots.findIndex((s) => s.id === slot.id)
               const isMoving = reschedulingId === slot.id
               const sameDayCount = slots.filter(
                 (s) =>
-                  s.plan_date === slot.plan_date &&
-                  s.status !== 'erledigt' &&
-                  s.status !== 'uebersprungen',
+                  s.plan_date === slot.plan_date && isTodoPlanSlotStatus(s.status),
               ).length
 
               return (
                 <li
                   key={slot.id}
-                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className={[
+                    'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between',
+                    overdue ? 'bg-amber-50/40' : '',
+                  ].join(' ')}
                 >
                   <div className="min-w-0 space-y-0.5">
                     <p className="text-xs text-zinc-400">
@@ -704,6 +905,7 @@ export function AdminPlanPage() {
                       {' · '}
                       {SLOT_STATUS_LABEL[slot.status] ?? slot.status}
                       {slot.plan_date === today ? ' · heute' : ''}
+                      {overdue ? ' · überfällig' : ''}
                     </p>
                     <p className="text-sm font-medium text-zinc-900 truncate">
                       {pool?.company_name ?? 'Ohne Zuweisung'}

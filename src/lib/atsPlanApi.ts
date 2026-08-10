@@ -33,6 +33,24 @@ export function todayLocalDateString(): string {
   return toLocalDateString(new Date())
 }
 
+/** Noch nicht erledigt — inkl. übersprungen (ausgesetzte Tage bleiben Todos). */
+export function isTodoPlanSlotStatus(status: ApplicationPlanSlotStatus): boolean {
+  return status !== 'erledigt'
+}
+
+/** Aktiv im Kalender (Unique plan_date+sort_order greift nur hier). */
+export function isActivePlanSlotStatus(status: ApplicationPlanSlotStatus): boolean {
+  return status === 'offen' || status === 'zugewiesen'
+}
+
+/** Vergangene, nicht erledigte Slots (inkl. uebersprungen). */
+export function isOverduePlanSlot(
+  slot: Pick<ApplicationPlanSlotRow, 'plan_date' | 'status'>,
+  today: string = todayLocalDateString(),
+): boolean {
+  return isTodoPlanSlotStatus(slot.status) && slot.plan_date < today
+}
+
 function mapSlotRow(row: Record<string, unknown>): PlanSlotWithPool {
   const jobPoolRaw = row.job_pool
   let job_pool: JobPoolRow | null = null
@@ -138,10 +156,36 @@ export async function getTodayOrNextSlots(): Promise<{
   }
 }
 
+/**
+ * Überfällige Todos: plan_date &lt; heute und nicht erledigt
+ * (offen / zugewiesen / uebersprungen — ausgesetzte Tage bleiben Todos).
+ */
+export async function listOverduePlanSlots(): Promise<{
+  data: PlanSlotWithPool[]
+  error: string | null
+}> {
+  const today = todayLocalDateString()
+  const { data, error } = await supabase
+    .from('application_plan_slots')
+    .select('*, job_pool(*)')
+    .lt('plan_date', today)
+    .neq('status', 'erledigt')
+    .order('plan_date', { ascending: true })
+    .order('sort_order', { ascending: true })
+
+  if (error) return { data: [], error: error.message }
+  return {
+    data: ((data as Record<string, unknown>[]) ?? []).map(mapSlotRow),
+    error: null,
+  }
+}
+
 export type CreatePlanResult = {
   slots: PlanSlotWithPool[]
   skippedOccupiedDates: string[]
   plannedPoolIds: string[]
+  /** Pool-IDs, die bereits einen Plan-Slot haben (beim Fortsetzen übersprungen). */
+  skippedAlreadyPlannedPoolIds: string[]
 }
 
 /**
@@ -158,6 +202,36 @@ export async function createPlanForPoolEntries(params: {
     return { data: null, error: 'Keine Pool-Einträge ausgewählt' }
   }
 
+  const { data: existingSlotRows, error: existingError } = await supabase
+    .from('application_plan_slots')
+    .select('job_pool_id')
+    .eq('user_id', params.userId)
+    .in('job_pool_id', poolIds)
+
+  if (existingError) return { data: null, error: existingError.message }
+
+  const skippedAlreadyPlannedPoolIds = [
+    ...new Set(
+      ((existingSlotRows as { job_pool_id: string | null }[]) ?? [])
+        .map((r) => r.job_pool_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ]
+
+  const newPoolIds = poolIds.filter((id) => !skippedAlreadyPlannedPoolIds.includes(id))
+
+  if (newPoolIds.length === 0) {
+    return {
+      data: {
+        slots: [],
+        skippedOccupiedDates: [],
+        plannedPoolIds: [],
+        skippedAlreadyPlannedPoolIds,
+      },
+      error: null,
+    }
+  }
+
   const { data: occupiedRows, error: occupiedError } = await supabase
     .from('application_plan_slots')
     .select('plan_date')
@@ -172,21 +246,21 @@ export async function createPlanForPoolEntries(params: {
 
   const dates: string[] = []
   let cursor = parsePlanDateLocal(params.startDate)
-  while (dates.length < poolIds.length) {
+  while (dates.length < newPoolIds.length) {
     const key = toLocalDateString(cursor)
     if (!occupied.has(key)) {
       dates.push(key)
     }
     cursor = addDaysLocal(cursor, 1)
     // safety: avoid infinite loop
-    if (dates.length + occupied.size > poolIds.length + 400) {
+    if (dates.length + occupied.size > newPoolIds.length + 400) {
       return { data: null, error: 'Zu viele belegte Plan-Tage – bitte Start datum prüfen' }
     }
   }
 
   const skippedOccupiedDates = [...occupied].filter((d) => d >= params.startDate).sort()
 
-  const inserts = poolIds.map((poolId, index) => ({
+  const inserts = newPoolIds.map((poolId, index) => ({
     user_id: params.userId,
     plan_date: dates[index],
     sort_order: 0,
@@ -203,7 +277,7 @@ export async function createPlanForPoolEntries(params: {
   if (insertError) return { data: null, error: insertError.message }
 
   const plannedPoolIds: string[] = []
-  for (const poolId of poolIds) {
+  for (const poolId of newPoolIds) {
     const { error: updateError } = await updateJobPoolEntry(poolId, { status: 'geplant' })
     if (!updateError) plannedPoolIds.push(poolId)
   }
@@ -213,7 +287,126 @@ export async function createPlanForPoolEntries(params: {
       slots: ((inserted as Record<string, unknown>[]) ?? []).map(mapSlotRow),
       skippedOccupiedDates,
       plannedPoolIds,
+      skippedAlreadyPlannedPoolIds,
     },
+    error: null,
+  }
+}
+
+export type ReplanSlotsResult = {
+  slots: PlanSlotWithPool[]
+  skippedOccupiedDates: string[]
+}
+
+/**
+ * Verschiebt bestehende Slots (z. B. überfällig / uebersprungen) auf freie Tage ab startDate.
+ * Unique (user_id, job_pool_id) → UPDATE plan_date/status, kein Insert.
+ * Status wird auf „zugewiesen“ gesetzt (Todos wieder aktiv im Plan).
+ */
+export async function replanExistingPlanSlots(params: {
+  userId: string
+  slotIds: string[]
+  startDate: string
+}): Promise<{ data: ReplanSlotsResult | null; error: string | null }> {
+  const slotIds = [...new Set(params.slotIds.filter(Boolean))]
+  if (slotIds.length === 0) {
+    return { data: null, error: 'Keine Slots ausgewählt' }
+  }
+
+  const { data: slotRows, error: loadError } = await supabase
+    .from('application_plan_slots')
+    .select('*, job_pool(*)')
+    .eq('user_id', params.userId)
+    .in('id', slotIds)
+
+  if (loadError) return { data: null, error: loadError.message }
+
+  const slots = ((slotRows as Record<string, unknown>[]) ?? []).map(mapSlotRow)
+  if (slots.length === 0) {
+    return { data: null, error: 'Keine passenden Slots gefunden' }
+  }
+
+  const todoSlots = slots.filter((s) => isTodoPlanSlotStatus(s.status))
+  if (todoSlots.length === 0) {
+    return { data: null, error: 'Alle ausgewählten Slots sind bereits erledigt' }
+  }
+
+  const movingIds = new Set(todoSlots.map((s) => s.id))
+
+  const { data: occupiedRows, error: occupiedError } = await supabase
+    .from('application_plan_slots')
+    .select('id, plan_date, status')
+    .eq('user_id', params.userId)
+    .gte('plan_date', params.startDate)
+    .in('status', ['offen', 'zugewiesen'])
+
+  if (occupiedError) return { data: null, error: occupiedError.message }
+
+  const occupied = new Set(
+    ((occupiedRows as { id: string; plan_date: string; status: string }[]) ?? [])
+      .filter((r) => !movingIds.has(r.id))
+      .map((r) => r.plan_date),
+  )
+
+  const dates: string[] = []
+  let cursor = parsePlanDateLocal(params.startDate)
+  while (dates.length < todoSlots.length) {
+    const key = toLocalDateString(cursor)
+    if (!occupied.has(key)) {
+      dates.push(key)
+    }
+    cursor = addDaysLocal(cursor, 1)
+    if (dates.length + occupied.size > todoSlots.length + 400) {
+      return { data: null, error: 'Zu viele belegte Plan-Tage – bitte Startdatum prüfen' }
+    }
+  }
+
+  const skippedOccupiedDates = [...occupied].filter((d) => d >= params.startDate).sort()
+
+  // Chronologisch nach bisherigem Datum, damit die Reihenfolge der Todos erhalten bleibt
+  const ordered = [...todoSlots].sort((a, b) => {
+    if (a.plan_date !== b.plan_date) return a.plan_date.localeCompare(b.plan_date)
+    return a.sort_order - b.sort_order
+  })
+
+  // Phase 1: temporäre sort_orders (Unique-Kollisionen vermeiden)
+  for (let i = 0; i < ordered.length; i++) {
+    const { error } = await supabase
+      .from('application_plan_slots')
+      .update({
+        plan_date: dates[i],
+        sort_order: 10_000 + i,
+        status: 'zugewiesen' as ApplicationPlanSlotStatus,
+        label: `Tag ${i + 1}`,
+      })
+      .eq('id', ordered[i].id)
+    if (error) return { data: null, error: error.message }
+  }
+
+  const updated: PlanSlotWithPool[] = []
+  for (let i = 0; i < ordered.length; i++) {
+    const { data, error } = await supabase
+      .from('application_plan_slots')
+      .update({
+        plan_date: dates[i],
+        sort_order: 0,
+        status: 'zugewiesen' as ApplicationPlanSlotStatus,
+        label: `Tag ${i + 1}`,
+      })
+      .eq('id', ordered[i].id)
+      .select('*, job_pool(*)')
+      .maybeSingle()
+    if (error) return { data: null, error: error.message }
+    if (data) updated.push(mapSlotRow(data as Record<string, unknown>))
+
+    const poolId = ordered[i].job_pool_id
+    if (poolId) {
+      await updateJobPoolEntry(poolId, { status: 'geplant' })
+    }
+  }
+
+  return {
+    data: { slots: updated, skippedOccupiedDates },
     error: null,
   }
 }
@@ -351,7 +544,9 @@ export function deriveCapacityByDate(
   return capacity
 }
 
-/** Schreibt plan_date / sort_order / label für mehrere Slots (nach Reschedule). */
+/** Schreibt plan_date / sort_order / label für mehrere Slots (nach Reschedule).
+ * Setzt status auf „zugewiesen“, damit uebersprungene Todos wieder aktiv sind.
+ */
 export async function persistPlanSlotSchedule(
   updates: Array<{ id: string; plan_date: string; sort_order: number; label?: string }>,
 ): Promise<{ error: string | null }> {
@@ -364,6 +559,7 @@ export async function persistPlanSlotSchedule(
       .update({
         plan_date: u.plan_date,
         sort_order: 10_000 + i,
+        status: 'zugewiesen' as ApplicationPlanSlotStatus,
       })
       .eq('id', u.id)
     if (error) return { error: error.message }
@@ -373,6 +569,7 @@ export async function persistPlanSlotSchedule(
     const patch: Record<string, unknown> = {
       plan_date: u.plan_date,
       sort_order: u.sort_order,
+      status: 'zugewiesen' as ApplicationPlanSlotStatus,
     }
     if (u.label != null) patch.label = u.label
     const { error } = await supabase
